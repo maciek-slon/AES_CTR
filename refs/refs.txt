@@ -1,0 +1,2 @@
+JavaScript Implementation of AES Advanced Encryption Standard in Counter Mode
+http://www.movable-type.co.uk/scripts/aes.html
