@@ -6,13 +6,7 @@
  */
 
 #include "AES.h"
-#include "matrices.h"
-#include <iostream>
-#include <sys/time.h>
-#include <stdio.h>
-#include <string.h>
-#include <math.h>
-#include <stdlib.h>
+
 
 // xtime is a macro that finds the product of {02} and the argument to xtime modulo {1b}
 #define xtime(x)   ((x<<1) ^ (((x>>7) & 1) * 0x1b))
@@ -21,28 +15,17 @@
 #define Multiply(x,y) (((y & 1) * x) ^ ((y>>1 & 1) * xtime(x)) ^ ((y>>2 & 1) * xtime(xtime(x))) ^ ((y>>3 & 1) * xtime(xtime(xtime(x)))) ^ ((y>>4 & 1) * xtime(xtime(xtime(xtime(x))))))
 
 
-AES::AES() {
-	Nb = 4;
-	Nr = 0;
-	Nk = 0;
-
-}
-
-AES::~AES() {
-
-}
-
-uint8_t AES::getSBoxValue(int num)
+uint8_t getSBoxValue(int num)
 {
     return sbox[num];
 }
 
-uint8_t AES::getSBoxInvert(int num){
+uint8_t getSBoxInvert(int num){
 	return rsbox[num];
 }
 
 // This function produces Nb(Nr+1) round keys. The round keys are used in each round to encrypt the states.
-void AES::KeyExpansion()
+void KeyExpansion()
 {
     int i,j;
     uint8_t temp[4],k;
@@ -110,7 +93,7 @@ void AES::KeyExpansion()
 
 // This function adds the round key to state.
 // The round key is added to the state by an XOR function.
-void AES::AddRoundKey(int round)
+void AddRoundKey(int round)
 {
     int i,j;
     for(i=0;i<4;i++)
@@ -124,7 +107,7 @@ void AES::AddRoundKey(int round)
 
 // The SubBytes Function Substitutes the values in the
 // state matrix with values in an S-box.
-void AES::SubBytes()
+void SubBytes()
 {
     int i,j;
     for(i=0;i<4;i++)
@@ -140,7 +123,7 @@ void AES::SubBytes()
 // The ShiftRows() function shifts the rows in the state to the left.
 // Each row is shifted with different offset.
 // Offset = Row number. So the first row is not shifted.
-void AES::ShiftRows()
+void ShiftRows()
 {
     uint8_t temp;
 
@@ -173,7 +156,7 @@ void AES::ShiftRows()
 // MixColumns function mixes the columns of the state matrix
 // The method used may look complicated, but it is easy if you know the underlying theory.
 // Refer the documents specified above.
-void AES::MixColumns()
+void MixColumns()
 {
     int i;
     uint8_t Tmp,Tm,t;
@@ -189,7 +172,7 @@ void AES::MixColumns()
 }
 
 // Cipher is the main function that encrypts the PlainText.
-void AES::Cipher()
+void Cipher()
 {
     int i,j,round=0;
 
@@ -233,47 +216,43 @@ void AES::Cipher()
     }
 }
 
-void AES::setNr(int Nr){
-	this->Nr = Nr;
-}
-
-void AES::setNk(int Nk){
-	this->Nk = Nk;
-}
-
-void AES::copyKey(uint8_t *key){
-	for(int i = 0; i < Nk*4; i++){
+void copyKey(uint8_t *key){
+	int i;
+	for(i = 0; i < Nk*4; i++){
 		Key[i]=key[i];
 	}
 
 }
 
-void AES::copyInput(uint8_t* input, int cnt){
+void copyInput(uint8_t* input, int cnt){
 //	for(int i = 0; i < Nk*4; i++){
+	int i;
 	memset(in, 0, sizeof(uint8_t) * 16);
-	for(int i = 0; i < cnt; i++){
+	for(i = 0; i < cnt; i++){
 		in[i]=input[i];
 	}
 }
 
-void AES::printOutput(){
-	cout << "\nText after encryption:\n";
+void printOutput(){
+	printf("\nText after encryption:\n");
+	int i;
 //	for(int i = 0; i < Nk*4; i++){
-	for(int i = 0; i < 16; i++){
-		cout << out[i];
+	for(i = 0; i < 16; i++){
+		printf("%c",out[i]);
 	}
-	cout << "\n\n";
+	printf("\n");
 }
 
-void AES::copyOutToIn(){
-	for(int i = 0; i < Nk*4; i++){
+void copyOutToIn(){
+	int i;
+	for(i = 0; i < Nk*4; i++){
 		in[i]=out[i];
 	}
 }
 
 // The SubBytes Function Substitutes the values in the
 // state matrix with values in an S-box.
-void AES::InvSubBytes(){
+void InvSubBytes(){
     int i,j;
     for(i=0;i<4;i++)
     {
@@ -288,18 +267,18 @@ void AES::InvSubBytes(){
 // The ShiftRows() function shifts the rows in the state to the left.
 // Each row is shifted with different offset.
 // Offset = Row number. So the first row is not shifted.
-void AES::InvShiftRows(){
+void InvShiftRows(){
     uint8_t temp;
 
     // Rotate first row 1 columns to right   
-        temp=state[1][3];
+	temp=state[1][3];
     state[1][3]=state[1][2];
     state[1][2]=state[1][1];
     state[1][1]=state[1][0];
     state[1][0]=temp;
 
     // Rotate second row 2 columns to right   
-        temp=state[2][0];
+	temp=state[2][0];
     state[2][0]=state[2][2];
     state[2][2]=temp;
 
@@ -318,9 +297,10 @@ void AES::InvShiftRows(){
 // MixColumns function mixes the columns of the state matrix.
 // The method used to multiply may be difficult to understand for beginners.
 // Please use the references to gain more information.
-void AES::InvMixColumns(){
+void InvMixColumns(){
+	int i;
     uint8_t a,b,c,d;
-    for(int i = 0; i < 4; i++){
+    for(i = 0; i < 4; i++){
 		a = state[0][i];
 		b = state[1][i];
 		c = state[2][i];
@@ -333,7 +313,7 @@ void AES::InvMixColumns(){
 }
 
 // InvCipher is the main function that decrypts the CipherText.
-void AES::InvCipher()
+void InvCipher()
 {
     int i,j,round=0;
 
@@ -383,10 +363,10 @@ void AES::InvCipher()
 /**
  * Encrypt a text using AES encryption in Counter mode of operation
  */
-uint8_t* AES::Cipher_CTR(uint8_t* input){//, uint8_t* output) {
+uint8_t* Cipher_CTR(uint8_t* input){//, uint8_t* output) {
 	int blockSize = 16;  // block size fixed at 16 bytes / 128 bits (Nb=4) for AES
-	string str = reinterpret_cast<char*>(input);
-	int input_length = str.size();
+	char* str = (char*)input;
+	int input_length = strlen(str);
 
 	uint8_t* counterBlock = (uint8_t*)malloc(sizeof(uint8_t) * blockSize);
 
@@ -398,12 +378,12 @@ uint8_t* AES::Cipher_CTR(uint8_t* input){//, uint8_t* output) {
 //		counterBlock[i] = (nonce.tv_sec >> i * 8) & 0xff;
 //		counterBlock[i + 4] = (nonce.tv_usec >> i * 8) & 0xff;
 //	}
-	uint32_t* cb = reinterpret_cast<uint32_t *>(counterBlock);
+	uint32_t* cb = (uint32_t *)counterBlock;
 	cb[0] = nonce.tv_sec & 0xffffffff;
 	cb[1] = nonce.tv_usec & 0xffffffff;
 
 
-	copyInput(counterBlock);
+	copyInput(counterBlock, blockSize);
 	Cipher();
 
 	uint8_t* output = (uint8_t*)malloc((input_length + blockSize) * sizeof(uint8_t));
@@ -413,38 +393,33 @@ uint8_t* AES::Cipher_CTR(uint8_t* input){//, uint8_t* output) {
 
 	uint64_t blockCount = ceil((float)input_length/blockSize);
 
-	cout << "Długość ciągu wejsciowego: " << input_length << endl << "Liczba blokow: " << blockCount << endl;
+	printf("Długość ciągu wejsciowego: %lf \nLiczba blokow: %d\n", input_length, blockCount);
 
-	for(uint64_t b = 0; b < blockCount; ++b){
+	uint64_t b;
+	int i;
+
+	for(b = 0; b < blockCount; ++b){
 		//Write block counter as last 8 bytes
-		uint64_t* cb = reinterpret_cast<uint64_t*>(counterBlock);
+		uint64_t* cb = (uint64_t*)counterBlock;
 		cb[1] = b;
 
-		copyInput(counterBlock);
+		copyInput(counterBlock, blockSize);
 		Cipher();
 
-//		cout <<"Iteracja nr: " << b << endl;
-
 		if(b != blockCount -1){
-			for(int i = 0; i < blockSize; ++i){
+			for(i = 0; i < blockSize; ++i){
 				output[(b+1) * blockSize + i] = out[i] ^ input[b * blockSize + i];
-//				cout << output[(b+1) * blockSize + i];
 			}
 		}else{
 			int blockLength = input_length % blockSize;
 
-			for(int i = 0; i < blockLength; ++i){
+			for(i = 0; i < blockLength; ++i){
 				output[(b+1) * blockSize + i] = out[i] ^ input[b * blockSize + i];
-//				cout << output[(b+1) * blockSize + i];
 			}
-			for(int i = blockLength; i < blockSize; ++i){
+			for(i = blockLength; i < blockSize; ++i){
 				output[(b+1) * blockSize + i] = out[i] ^ 0x00;
-//				cout << output[(b+1) * blockSize + i];
 			}
 		}
-
-
-		cout << endl;
 
 	}
 	return output;
@@ -452,22 +427,19 @@ uint8_t* AES::Cipher_CTR(uint8_t* input){//, uint8_t* output) {
 
 /**
  * Decrypt a text encrypted by AES in counter mode of operation
- *
- * @param {String} ciphertext Source text to be encrypted
- * @param {String} password   The password to use to generate a key
- * @param {Number} nBits      Number of bits to be used in the key (128, 192, or 256)
- * @returns {String}          Decrypted text
  */
-uint8_t* AES::InvCipher_CTR(uint8_t* input){//, uint8_t* output){
+uint8_t* InvCipher_CTR(uint8_t* input){//, uint8_t* output){
+	uint64_t b;
+	int i;
 	int blockSize = 16;  // block size fixed at 16 bytes / 128 bits (Nb=4) for AES
-	string str = reinterpret_cast<char*>(input);
-	int input_length = str.size();
+	char* str = (char*)input;
+	int input_length = strlen(str);
 
 	uint8_t* output = (uint8_t*)malloc((input_length - blockSize) * sizeof(uint8_t));
 
 	uint8_t* counterBlock = (uint8_t*)malloc(sizeof(uint8_t)*16);
 
-	copyInput(input);
+	copyInput(input, blockSize);
 	InvCipher();
 
 	memcpy(counterBlock, out, sizeof(uint8_t) * blockSize);
@@ -475,15 +447,15 @@ uint8_t* AES::InvCipher_CTR(uint8_t* input){//, uint8_t* output){
 
 	uint64_t blockCount = ceil((float)input_length/blockSize);
 
-	for(uint64_t b = 0; b < blockCount - 1; ++b){
+	for(b = 0; b < blockCount - 1; ++b){
 		//Write block counter as last 8 bytes
-		uint64_t* cb = reinterpret_cast<uint64_t*>(counterBlock);
+		uint64_t* cb = (uint64_t*)counterBlock;
 		cb[1] = b;
 
-		copyInput(counterBlock);
+		copyInput(counterBlock, blockSize);
 		Cipher();
 
-		for(int i = 0; i < blockSize; ++i){
+		for(i = 0; i < blockSize; ++i){
 			output[b * blockSize + i] = out[i] ^ input[(b + 1) * blockSize + i];
 		}
 
