@@ -59,8 +59,8 @@ T ror(const T & value, int places) {
 
 
 
-int main() {
-	uint32_t i = 0x00000001;
-	std::cout << rol(i, 16);
-	return 0;
-}
+//int main() {
+//	uint32_t i = 0x00000001;
+//	std::cout << rol(i, 16);
+//	return 0;
+//}

@@ -1,5 +1,5 @@
 # Create a variable containing all .cpp files
-FILE(GLOB files *.cpp)
+FILE(GLOB files *.c)
 
 # Checking compiler flags
 include(CheckCXXCompilerFlag)
