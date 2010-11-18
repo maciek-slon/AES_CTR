@@ -6,7 +6,7 @@
  */
 
 #include "AES.h"
-
+#include <omp.h>
 
 // xtime is a macro that finds the product of {02} and the argument to xtime modulo {1b}
 #define xtime(x)   ((x<<1) ^ (((x>>7) & 1) * 0x1b))
@@ -31,8 +31,7 @@ void KeyExpansion()
     uint8_t temp[4],k;
 
     // The first round key is the key itself.
-    for(i=0;i<Nk;i++)
-    {
+    for(i=0;i<Nk;i++){
         RoundKey[i*4]=Key[i*4];
         RoundKey[i*4+1]=Key[i*4+1];
         RoundKey[i*4+2]=Key[i*4+2];
@@ -40,14 +39,13 @@ void KeyExpansion()
     }
 
     // All other round keys are found from the previous round keys.
-    while (i < (Nb * (Nr+1)))
-    {
-        for(j=0;j<4;j++)
-        {
+    while (i < (Nb * (Nr+1))){
+
+        for(j=0;j<4;j++){
             temp[j]=RoundKey[(i-1) * 4 + j];
         }
-        if (i % Nk == 0)
-        {
+
+        if (i % Nk == 0){
             // This function rotates the 4 bytes in a word to the left once.
             // [a0,a1,a2,a3] becomes [a1,a2,a3,a0]
 
@@ -73,8 +71,7 @@ void KeyExpansion()
 
             temp[0] =  temp[0] ^ Rcon[i/Nk];
         }
-        else if (Nk > 6 && i % Nk == 4)
-        {
+        else if (Nk > 6 && i % Nk == 4){
             // Function Subword()
             {
                 temp[0]=getSBoxValue(temp[0]);
@@ -93,13 +90,11 @@ void KeyExpansion()
 
 // This function adds the round key to state.
 // The round key is added to the state by an XOR function.
-void AddRoundKey(int round)
-{
+void AddRoundKey(int round){
+
     int i,j;
-    for(i=0;i<4;i++)
-    {
-        for(j=0;j<4;j++)
-        {
+    for(i=0;i<4;i++){
+        for(j=0;j<4;j++){
             state[j][i] ^= RoundKey[round * Nb * 4 + i * Nb + j];
         }
     }
@@ -107,13 +102,11 @@ void AddRoundKey(int round)
 
 // The SubBytes Function Substitutes the values in the
 // state matrix with values in an S-box.
-void SubBytes()
-{
+void SubBytes(){
+
     int i,j;
-    for(i=0;i<4;i++)
-    {
-        for(j=0;j<4;j++)
-        {
+    for(i=0;i<4;i++){
+        for(j=0;j<4;j++){
             state[i][j] = getSBoxValue(state[i][j]);
 
         }
@@ -123,8 +116,8 @@ void SubBytes()
 // The ShiftRows() function shifts the rows in the state to the left.
 // Each row is shifted with different offset.
 // Offset = Row number. So the first row is not shifted.
-void ShiftRows()
-{
+void ShiftRows(){
+
     uint8_t temp;
 
     // Rotate first row 1 columns to left
@@ -156,12 +149,11 @@ void ShiftRows()
 // MixColumns function mixes the columns of the state matrix
 // The method used may look complicated, but it is easy if you know the underlying theory.
 // Refer the documents specified above.
-void MixColumns()
-{
+void MixColumns(){
+
     int i;
     uint8_t Tmp,Tm,t;
-    for(i=0;i<4;i++)
-    {
+    for(i=0;i<4;i++){
         t=state[0][i];
         Tmp = state[0][i] ^ state[1][i] ^ state[2][i] ^ state[3][i] ;
         Tm = state[0][i] ^ state[1][i] ; Tm = xtime(Tm); state[0][i] ^= Tm ^ Tmp ;
@@ -222,6 +214,12 @@ void copyKey(uint8_t *key){
 		Key[i]=key[i];
 	}
 
+}
+
+void copyKeyFromFile(FILE *key){
+	memset(Key, 0, sizeof(uint8_t)*32);
+
+	fread(Key, sizeof(uint8_t), 32, key);
 }
 
 void copyInput(uint8_t* input, int cnt){
@@ -363,10 +361,13 @@ void InvCipher()
 /**
  * Encrypt a text using AES encryption in Counter mode of operation
  */
-uint8_t* Cipher_CTR(uint8_t* input){//, uint8_t* output) {
+void Cipher_CTR(FILE* input, FILE* output){//uint8_t* input){//, uint8_t* output) {
 	int blockSize = 16;  // block size fixed at 16 bytes / 128 bits (Nb=4) for AES
-	char* str = (char*)input;
-	int input_length = strlen(str);
+	int blockLength;
+
+	fseek(input, 0, SEEK_END);
+	long int input_length = ftell(input);
+	fseek(input, 0, SEEK_SET);
 
 	uint8_t* counterBlock = (uint8_t*)malloc(sizeof(uint8_t) * blockSize);
 
@@ -374,10 +375,6 @@ uint8_t* Cipher_CTR(uint8_t* input){//, uint8_t* output) {
 	gettimeofday(&nonce, NULL);
 
 	//Write seconds on first 4 bytes, and miliseconds on next 4
-//	for(int i = 0; i < 4; ++i){
-//		counterBlock[i] = (nonce.tv_sec >> i * 8) & 0xff;
-//		counterBlock[i + 4] = (nonce.tv_usec >> i * 8) & 0xff;
-//	}
 	uint32_t* cb = (uint32_t *)counterBlock;
 	cb[0] = nonce.tv_sec & 0xffffffff;
 	cb[1] = nonce.tv_usec & 0xffffffff;
@@ -386,80 +383,112 @@ uint8_t* Cipher_CTR(uint8_t* input){//, uint8_t* output) {
 	copyInput(counterBlock, blockSize);
 	Cipher();
 
-	uint8_t* output = (uint8_t*)malloc((input_length + blockSize) * sizeof(uint8_t));
-	memset(output, 0, sizeof(uint8_t) * blockSize);
-	memcpy(output, out, sizeof(uint8_t) * blockSize);
+	fwrite(out, sizeof(uint8_t), blockSize, output);
 
 
 	uint64_t blockCount = ceil((float)input_length/blockSize);
 
-	printf("Długość ciągu wejsciowego: %lf \nLiczba blokow: %d\n", input_length, blockCount);
+	printf("Długość ciągu wejsciowego: %d \nLiczba blokow: %lld\n", input_length, blockCount);
 
 	uint64_t b;
 	int i;
 
-	for(b = 0; b < blockCount; ++b){
-		//Write block counter as last 8 bytes
-		uint64_t* cb = (uint64_t*)counterBlock;
-		cb[1] = b;
+	#pragma omp parallel  private(out, in, state, b, i, blockLength) shared(input, output, input_length, blockSize, counterBlock)
+	{
+		uint8_t* tmp = (uint8_t*)malloc(sizeof(uint8_t) * blockSize);
 
-		copyInput(counterBlock, blockSize);
-		Cipher();
+		#pragma omp for
+		for(b = 0; b < blockCount; ++b){
+			//Write block counter as last 8 bytes
+			uint64_t* cb = (uint64_t*)counterBlock;
+			cb[1] = b;
 
-		if(b != blockCount -1){
-			for(i = 0; i < blockSize; ++i){
-				output[(b+1) * blockSize + i] = out[i] ^ input[b * blockSize + i];
+
+			copyInput(counterBlock, blockSize);
+			Cipher();
+
+			#pragma omp critical
+			{
+				fseek(input, b * blockSize, SEEK_SET);
+				blockLength = fread(tmp, sizeof(uint8_t), blockSize, input);
 			}
-		}else{
-			int blockLength = input_length % blockSize;
 
-			for(i = 0; i < blockLength; ++i){
-				output[(b+1) * blockSize + i] = out[i] ^ input[b * blockSize + i];
+			if(blockLength == blockSize){
+				for(i = 0; i < blockSize; ++i){
+					tmp[i] = out[i] ^ tmp[i];
+				}
+			}else{
+				for(i = 0; i < blockLength; ++i){
+					tmp[i] = out[i] ^ tmp[i];
+				}
+				for(i = blockLength; i < blockSize; ++i){
+					tmp[i] = out[i] ^ 0x00;
+				}
 			}
-			for(i = blockLength; i < blockSize; ++i){
-				output[(b+1) * blockSize + i] = out[i] ^ 0x00;
+
+			#pragma omp critical
+			{
+				fseek(output, (b + 1) * blockSize, SEEK_SET);
+				fwrite(tmp, sizeof(uint8_t), blockSize, output);
 			}
 		}
-
 	}
-	return output;
+
 }
 
 /**
  * Decrypt a text encrypted by AES in counter mode of operation
  */
-uint8_t* InvCipher_CTR(uint8_t* input){//, uint8_t* output){
+void InvCipher_CTR(FILE* input, FILE* output){//uint8_t* input){//, uint8_t* output){
 	uint64_t b;
 	int i;
 	int blockSize = 16;  // block size fixed at 16 bytes / 128 bits (Nb=4) for AES
-	char* str = (char*)input;
-	int input_length = strlen(str);
 
-	uint8_t* output = (uint8_t*)malloc((input_length - blockSize) * sizeof(uint8_t));
+	fseek(input, 0, SEEK_END);
+	long int input_length = ftell(input);
+	fseek(input, 0, SEEK_SET);
 
-	uint8_t* counterBlock = (uint8_t*)malloc(sizeof(uint8_t)*16);
+	uint8_t* counterBlock = (uint8_t*)malloc(sizeof(uint8_t) * blockSize);
 
-	copyInput(input, blockSize);
+	fread(in, sizeof(uint8_t), blockSize, input);
 	InvCipher();
 
 	memcpy(counterBlock, out, sizeof(uint8_t) * blockSize);
 
 
 	uint64_t blockCount = ceil((float)input_length/blockSize);
+	printf("DEC:  Długość ciągu wejsciowego: %d \nLiczba blokow: %lld\n", input_length, blockCount);
 
-	for(b = 0; b < blockCount - 1; ++b){
-		//Write block counter as last 8 bytes
-		uint64_t* cb = (uint64_t*)counterBlock;
-		cb[1] = b;
+	#pragma omp parallel private(out, in, state, b, i) shared(input, output, blockSize, counterBlock)
+	{
 
-		copyInput(counterBlock, blockSize);
-		Cipher();
+		uint8_t* tmp = (uint8_t*)malloc(sizeof(uint8_t) * blockSize);
 
-		for(i = 0; i < blockSize; ++i){
-			output[b * blockSize + i] = out[i] ^ input[(b + 1) * blockSize + i];
+		#pragma omp for
+		for(b = 0; b < blockCount - 1; ++b){
+			//Write block counter as last 8 bytes
+			uint64_t* cb = (uint64_t*)counterBlock;
+			cb[1] = b;
+
+			copyInput(counterBlock, blockSize);
+			Cipher();
+
+			#pragma omp critical
+			{
+				fseek(input, (b + 1) * blockSize, SEEK_SET);
+				fread(tmp, sizeof(uint8_t), blockSize, input);
+			}
+
+			for(i = 0; i < blockSize; ++i){
+				tmp[i] = out[i] ^ tmp[i];
+			}
+
+			#pragma omp critical
+			{
+				fseek(output, b * blockSize, SEEK_SET);
+				fwrite(tmp, sizeof(uint8_t), blockSize, output);
+			}
+
 		}
-
 	}
-
-	return output;
 }

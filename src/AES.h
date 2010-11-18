@@ -8,6 +8,8 @@
 #ifndef AES_CTR_H_
 #define AES_CTR_H_
 
+#define DEBUG
+
 #include <stdint.h>
 #include "matrices.h"
 #include <sys/time.h>
@@ -31,8 +33,8 @@ void InvCipher();
 
 //	void Cipher_CTR(uint8_t* input, uint8_t* output);
 //	void InvCipher_CTR(uint8_t* input, uint8_t* output);
-uint8_t* Cipher_CTR(uint8_t* input);
-uint8_t* InvCipher_CTR(uint8_t* input);
+void Cipher_CTR(FILE* in, FILE*out);
+void InvCipher_CTR(FILE* in, FILE*out);
 
 
 uint8_t getSBoxValue(int num);
@@ -42,6 +44,7 @@ void setNr(int Nr);
 void setNk(int Nk);
 
 void copyKey(uint8_t *key);
+void copyKeyFromFile(FILE *key);
 void copyInput(uint8_t* input, int cnt);
 
 void printOutput();
