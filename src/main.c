@@ -70,15 +70,14 @@
 
 #include "AES.h"
 #include <stdio.h>
-
+#include <omp.h>
 
 int main(int argc, char** argv){
 
 	FILE* in, *out, *key;
-	FILE* third;
 
 	if(argc < 4){
-		printf("Usage: AES_CTR <key_length> <key_file> <input_file> [<output_file>]\nKey length should be 128, 192, or 256 bit.\nIf no output filename defined, default name \"output\".\n");\
+		printf("Usage: AES_CTR <key_length> <key_file> <input_file> [<threads_no>] [<output_file>]\nKey length should be 128, 192, or 256 bit.\nYou can precise number of running thread, default 1.\nIf no output filename defined, default name \"output\".\n");\
 		return(0);
 	}
 
@@ -101,7 +100,12 @@ int main(int argc, char** argv){
 	}
 
 	if(argc > 4)
-		out = fopen(argv[4], "wb+");
+		threads = atoi(argv[4]);
+	else
+		threads = 1;
+
+	if(argc > 5)
+		out = fopen(argv[5], "wb+");
 	else
 		out = fopen("output", "wb+");
 
@@ -110,7 +114,6 @@ int main(int argc, char** argv){
 		return (0);
 	}
 
-	third = fopen("third", "wb+");
 
 	// Calculate Nk and Nr from the received value.
 	Nk = Nr / 32;
@@ -119,12 +122,18 @@ int main(int argc, char** argv){
 
 	copyKeyFromFile(key);
 
+	readInputData(in);
+
 	// The KeyExpansion routine must be called before encryption.
 	KeyExpansion();
 
-	Cipher_CTR(in, out);
+	Cipher_CTR();
 
-	InvCipher_CTR(out, third);
+	copyOutToIn();
+
+	InvCipher_CTR();
+
+	writeOutputData(out);
 
 	return (0);
 }

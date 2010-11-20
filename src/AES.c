@@ -31,18 +31,18 @@ void KeyExpansion()
     uint8_t temp[4],k;
 
     // The first round key is the key itself.
-    for(i=0;i<Nk;i++){
-        RoundKey[i*4]=Key[i*4];
-        RoundKey[i*4+1]=Key[i*4+1];
-        RoundKey[i*4+2]=Key[i*4+2];
-        RoundKey[i*4+3]=Key[i*4+3];
+    for(i=0; i < Nk;i++){
+        RoundKey[i*4] = Key[i*4];
+        RoundKey[i*4+1] = Key[i*4+1];
+        RoundKey[i*4+2] = Key[i*4+2];
+        RoundKey[i*4+3] = Key[i*4+3];
     }
 
     // All other round keys are found from the previous round keys.
     while (i < (Nb * (Nr+1))){
 
         for(j=0;j<4;j++){
-            temp[j]=RoundKey[(i-1) * 4 + j];
+            temp[j] = RoundKey[(i-1) * 4 + j];
         }
 
         if (i % Nk == 0){
@@ -80,10 +80,10 @@ void KeyExpansion()
                 temp[3]=getSBoxValue(temp[3]);
             }
         }
-        RoundKey[i*4+0] = RoundKey[(i-Nk)*4+0] ^ temp[0];
-        RoundKey[i*4+1] = RoundKey[(i-Nk)*4+1] ^ temp[1];
-        RoundKey[i*4+2] = RoundKey[(i-Nk)*4+2] ^ temp[2];
-        RoundKey[i*4+3] = RoundKey[(i-Nk)*4+3] ^ temp[3];
+        RoundKey[i*4+0] = RoundKey[(i - Nk)*4+0] ^ temp[0];
+        RoundKey[i*4+1] = RoundKey[(i - Nk)*4+1] ^ temp[1];
+        RoundKey[i*4+2] = RoundKey[(i - Nk)*4+2] ^ temp[2];
+        RoundKey[i*4+3] = RoundKey[(i - Nk)*4+3] ^ temp[3];
         i++;
     }
 }
@@ -95,7 +95,7 @@ void AddRoundKey(int round){
     int i,j;
     for(i=0;i<4;i++){
         for(j=0;j<4;j++){
-            state[j][i] ^= RoundKey[round * Nb * 4 + i * Nb + j];
+        	state[j][i] ^= RoundKey[round * Nb * 4 + i * Nb + j];
         }
     }
 }
@@ -107,7 +107,7 @@ void SubBytes(){
     int i,j;
     for(i=0;i<4;i++){
         for(j=0;j<4;j++){
-            state[i][j] = getSBoxValue(state[i][j]);
+        	state[i][j] = getSBoxValue(state[i][j]);
 
         }
     }
@@ -121,27 +121,27 @@ void ShiftRows(){
     uint8_t temp;
 
     // Rotate first row 1 columns to left
-    temp=state[1][0];
-    state[1][0]=state[1][1];
-    state[1][1]=state[1][2];
-    state[1][2]=state[1][3];
-    state[1][3]=temp;
+    temp = state[1][0];
+    state[1][0] = state[1][1];
+    state[1][1] = state[1][2];
+    state[1][2] = state[1][3];
+    state[1][3] = temp;
 
     // Rotate second row 2 columns to left
-    temp=state[2][0];
-    state[2][0]=state[2][2];
-    state[2][2]=temp;
+    temp = state[2][0];
+    state[2][0] = state[2][2];
+    state[2][2] = temp;
 
-    temp=state[2][1];
-    state[2][1]=state[2][3];
-    state[2][3]=temp;
+    temp = state[2][1];
+    state[2][1] = state[2][3];
+    state[2][3] = temp;
 
     // Rotate third row 3 columns to left
-    temp=state[3][0];
-    state[3][0]=state[3][3];
-    state[3][3]=state[3][2];
-    state[3][2]=state[3][1];
-    state[3][1]=temp;
+    temp = state[3][0];
+    state[3][0] = state[3][3];
+    state[3][3] = state[3][2];
+    state[3][2] = state[3][1];
+    state[3][1] = temp;
 }
 
 
@@ -154,7 +154,7 @@ void MixColumns(){
     int i;
     uint8_t Tmp,Tm,t;
     for(i=0;i<4;i++){
-        t=state[0][i];
+        t = state[0][i];
         Tmp = state[0][i] ^ state[1][i] ^ state[2][i] ^ state[3][i] ;
         Tm = state[0][i] ^ state[1][i] ; Tm = xtime(Tm); state[0][i] ^= Tm ^ Tmp ;
         Tm = state[1][i] ^ state[2][i] ; Tm = xtime(Tm); state[1][i] ^= Tm ^ Tmp ;
@@ -164,8 +164,7 @@ void MixColumns(){
 }
 
 // Cipher is the main function that encrypts the PlainText.
-void Cipher()
-{
+void Cipher(){
     int i,j,round=0;
 
     //Copy the input PlainText to state array.
@@ -173,7 +172,7 @@ void Cipher()
     {
         for(j=0;j<4;j++)
         {
-            state[j][i] = in[i*4 + j];
+        	state[j][i] = in[i*4 + j];
         }
     }
 
@@ -183,7 +182,7 @@ void Cipher()
     // There will be Nr rounds.
     // The first Nr-1 rounds are identical.
     // These Nr-1 rounds are executed in the loop below.
-    for(round=1;round<Nr;round++)
+    for(round = 1; round < Nr; round++)
     {
         SubBytes();
         ShiftRows();
@@ -203,7 +202,7 @@ void Cipher()
     {
         for(j=0;j<4;j++)
         {
-            out[i*4+j]=state[j][i];
+        	out[i*4+j] = state[j][i];
         }
     }
 }
@@ -211,7 +210,7 @@ void Cipher()
 void copyKey(uint8_t *key){
 	int i;
 	for(i = 0; i < Nk*4; i++){
-		Key[i]=key[i];
+		Key[i] = key[i];
 	}
 
 }
@@ -227,7 +226,7 @@ void copyInput(uint8_t* input, int cnt){
 	int i;
 	memset(in, 0, sizeof(uint8_t) * 16);
 	for(i = 0; i < cnt; i++){
-		in[i]=input[i];
+		in[i] = input[i];
 	}
 }
 
@@ -236,16 +235,23 @@ void printOutput(){
 	int i;
 //	for(int i = 0; i < Nk*4; i++){
 	for(i = 0; i < 16; i++){
-		printf("%c",out[i]);
+		printf("%c", out[i]);
 	}
 	printf("\n");
 }
 
 void copyOutToIn(){
-	int i;
-	for(i = 0; i < Nk*4; i++){
-		in[i]=out[i];
-	}
+
+//	printf("BEFORE: %s\n", output);
+
+	free(input);
+	input = (uint8_t*)malloc(sizeof(uint8_t) * out_data_size);
+	memcpy(input, output, sizeof(uint8_t) * out_data_size);
+	free(output);
+	in_data_size = out_data_size;
+
+//	printf("AFTER: %s\n", input);
+
 }
 
 // The SubBytes Function Substitutes the values in the
@@ -256,7 +262,7 @@ void InvSubBytes(){
     {
         for(j=0;j<4;j++)
         {
-            state[i][j] = getSBoxInvert(state[i][j]);
+        	state[i][j] = getSBoxInvert(state[i][j]);
 
         }
     }
@@ -269,27 +275,27 @@ void InvShiftRows(){
     uint8_t temp;
 
     // Rotate first row 1 columns to right   
-	temp=state[1][3];
-    state[1][3]=state[1][2];
-    state[1][2]=state[1][1];
-    state[1][1]=state[1][0];
-    state[1][0]=temp;
+	temp = state[1][3];
+	state[1][3] = state[1][2];
+	state[1][2] = state[1][1];
+	state[1][1] = state[1][0];
+	state[1][0] = temp;
 
     // Rotate second row 2 columns to right   
-	temp=state[2][0];
-    state[2][0]=state[2][2];
-    state[2][2]=temp;
+	temp = state[2][0];
+	state[2][0] = state[2][2];
+	state[2][2] = temp;
 
-    temp=state[2][1];
-    state[2][1]=state[2][3];
-    state[2][3]=temp;
+    temp = state[2][1];
+    state[2][1] = state[2][3];
+    state[2][3] = temp;
 
     // Rotate third row 3 columns to right
-    temp=state[3][0];
-    state[3][0]=state[3][1];
-    state[3][1]=state[3][2];
-    state[3][2]=state[3][3];
-    state[3][3]=temp;
+    temp = state[3][0];
+    state[3][0] = state[3][1];
+    state[3][1] = state[3][2];
+    state[3][2] = state[3][3];
+    state[3][3] = temp;
 }
 
 // MixColumns function mixes the columns of the state matrix.
@@ -311,8 +317,7 @@ void InvMixColumns(){
 }
 
 // InvCipher is the main function that decrypts the CipherText.
-void InvCipher()
-{
+void InvCipher(){
     int i,j,round=0;
 
     //Copy the input CipherText to state array.
@@ -320,7 +325,7 @@ void InvCipher()
     {
         for(j=0;j<4;j++)
         {
-            state[j][i] = in[i*4 + j];
+        	state[j][i] = in[i*4 + j];
         }
     }
 
@@ -332,7 +337,7 @@ void InvCipher()
             // There will be Nr rounds.
     // The first Nr-1 rounds are identical.
     // These Nr-1 rounds are executed in the loop below.
-    for(round=Nr-1;round>0;round--)
+    for(round = Nr-1; round > 0; round--)
     {
         InvShiftRows();
         InvSubBytes();
@@ -352,7 +357,7 @@ void InvCipher()
     {
         for(j=0;j<4;j++)
         {
-            out[i*4+j]=state[j][i];
+        	out[i*4+j] = state[j][i];
         }
     }
 }
@@ -361,15 +366,14 @@ void InvCipher()
 /**
  * Encrypt a text using AES encryption in Counter mode of operation
  */
-void Cipher_CTR(FILE* input, FILE* output){//uint8_t* input){//, uint8_t* output) {
+void Cipher_CTR() {
 	int blockSize = 16;  // block size fixed at 16 bytes / 128 bits (Nb=4) for AES
 	int blockLength;
 
-	fseek(input, 0, SEEK_END);
-	long int input_length = ftell(input);
-	fseek(input, 0, SEEK_SET);
-
+	uint64_t blockCount = ceil((float)in_data_size/blockSize);
+	out_data_size = in_data_size + blockSize;//(blockCount + 1) * blockSize;
 	uint8_t* counterBlock = (uint8_t*)malloc(sizeof(uint8_t) * blockSize);
+	output = (uint8_t*)malloc(sizeof(uint8_t) * out_data_size);
 
 	struct timeval nonce;
 	gettimeofday(&nonce, NULL);
@@ -382,113 +386,119 @@ void Cipher_CTR(FILE* input, FILE* output){//uint8_t* input){//, uint8_t* output
 
 	copyInput(counterBlock, blockSize);
 	Cipher();
+	memcpy(output, out, sizeof(uint8_t) * blockSize);
 
-	fwrite(out, sizeof(uint8_t), blockSize, output);
 
-
-	uint64_t blockCount = ceil((float)input_length/blockSize);
-
-	printf("Długość ciągu wejsciowego: %d \nLiczba blokow: %lld\n", input_length, blockCount);
+	printf("Długość ciągu wejsciowego: %d \nLiczba blokow: %lld\n", in_data_size, blockCount);
 
 	uint64_t b;
 	int i;
 
-	#pragma omp parallel  private(out, in, state, b, i, blockLength) shared(input, output, input_length, blockSize, counterBlock)
+	#pragma omp parallel private(in, out, state, b, i, blockLength) shared(input, output, in_data_size, blockSize, counterBlock) num_threads(threads)
 	{
-		uint8_t* tmp = (uint8_t*)malloc(sizeof(uint8_t) * blockSize);
 
-		#pragma omp for
-		for(b = 0; b < blockCount; ++b){
-			//Write block counter as last 8 bytes
-			uint64_t* cb = (uint64_t*)counterBlock;
-			cb[1] = b;
+//	 	#pragma omp_set_num_threads(threads)
+		{
+
+			#pragma omp for
+			for(b = 0; b < blockCount; ++b){
+				//Write block counter as last 8 bytes
+				uint64_t* cb = (uint64_t*)counterBlock;
+				cb[1] = b;
 
 
-			copyInput(counterBlock, blockSize);
-			Cipher();
+				copyInput(counterBlock, blockSize);
+				Cipher();
 
-			#pragma omp critical
-			{
-				fseek(input, b * blockSize, SEEK_SET);
-				blockLength = fread(tmp, sizeof(uint8_t), blockSize, input);
-			}
+				if(b != blockCount - 1){
+					for(i = 0; i < blockSize; ++i){
+						output[(b + 1) * blockSize + i] = out[i] ^ input[b * blockSize + i];
+					}
+				}else{
 
-			if(blockLength == blockSize){
-				for(i = 0; i < blockSize; ++i){
-					tmp[i] = out[i] ^ tmp[i];
+					blockLength = in_data_size % blockSize;
+
+					for(i = 0; i < blockLength; ++i){
+						output[(b + 1) * blockSize + i] = out[i] ^ input[b * blockSize + i];
+					}
+					for(i = blockLength; i < blockSize; ++i){
+						output[(b + 1) * blockSize + i] = out[i] ^ 0x00;
+					}
 				}
-			}else{
-				for(i = 0; i < blockLength; ++i){
-					tmp[i] = out[i] ^ tmp[i];
-				}
-				for(i = blockLength; i < blockSize; ++i){
-					tmp[i] = out[i] ^ 0x00;
-				}
-			}
-
-			#pragma omp critical
-			{
-				fseek(output, (b + 1) * blockSize, SEEK_SET);
-				fwrite(tmp, sizeof(uint8_t), blockSize, output);
 			}
 		}
 	}
 
 }
-
-/**
- * Decrypt a text encrypted by AES in counter mode of operation
- */
-void InvCipher_CTR(FILE* input, FILE* output){//uint8_t* input){//, uint8_t* output){
+//
+///**
+// * Decrypt a text encrypted by AES in counter mode of operation
+// */
+void InvCipher_CTR(){
 	uint64_t b;
 	int i;
 	int blockSize = 16;  // block size fixed at 16 bytes / 128 bits (Nb=4) for AES
 
-	fseek(input, 0, SEEK_END);
-	long int input_length = ftell(input);
-	fseek(input, 0, SEEK_SET);
-
+	uint64_t blockCount = ceil((float)in_data_size/blockSize);
+	out_data_size = in_data_size - blockSize;//(blockCount - 1) * blockSize;
 	uint8_t* counterBlock = (uint8_t*)malloc(sizeof(uint8_t) * blockSize);
+	output = (uint8_t*)malloc(sizeof(uint8_t) * out_data_size);
 
-	fread(in, sizeof(uint8_t), blockSize, input);
+	memcpy(in, input, sizeof(uint8_t) * blockSize);
 	InvCipher();
 
 	memcpy(counterBlock, out, sizeof(uint8_t) * blockSize);
 
+	printf("DEC:  Długość ciągu wejsciowego: %d \nLiczba blokow: %lld\n", in_data_size, blockCount);
 
-	uint64_t blockCount = ceil((float)input_length/blockSize);
-	printf("DEC:  Długość ciągu wejsciowego: %d \nLiczba blokow: %lld\n", input_length, blockCount);
-
-	#pragma omp parallel private(out, in, state, b, i) shared(input, output, blockSize, counterBlock)
+	#pragma omp parallel private(in, out, state, b, i) shared(input, output, in_data_size, blockSize, counterBlock) num_threads(threads)
 	{
+//		#pragma omp_set_num_threads(threads)
+		{
 
-		uint8_t* tmp = (uint8_t*)malloc(sizeof(uint8_t) * blockSize);
+			#pragma omp for
+			for(b = 0; b < blockCount - 1; ++b){
+				//Write block counter as last 8 bytes
+				uint64_t* cb = (uint64_t*)counterBlock;
+				cb[1] = b;
 
-		#pragma omp for
-		for(b = 0; b < blockCount - 1; ++b){
-			//Write block counter as last 8 bytes
-			uint64_t* cb = (uint64_t*)counterBlock;
-			cb[1] = b;
+				copyInput(counterBlock, blockSize);
+				Cipher();
 
-			copyInput(counterBlock, blockSize);
-			Cipher();
+				for(i = 0; i < blockSize; ++i){
+					output[b * blockSize + i] = out[i] ^ input[(b + 1) * blockSize + i];
+				}
 
-			#pragma omp critical
-			{
-				fseek(input, (b + 1) * blockSize, SEEK_SET);
-				fread(tmp, sizeof(uint8_t), blockSize, input);
 			}
-
-			for(i = 0; i < blockSize; ++i){
-				tmp[i] = out[i] ^ tmp[i];
-			}
-
-			#pragma omp critical
-			{
-				fseek(output, b * blockSize, SEEK_SET);
-				fwrite(tmp, sizeof(uint8_t), blockSize, output);
-			}
-
 		}
 	}
+}
+
+void readInputData(FILE* in){
+
+	int read_length, i;
+	int chunk_size = 512; //bytes read at once;
+
+
+	fseek(in, 0, SEEK_END);
+	in_data_size = ftell(in);
+	fseek(in, 0, SEEK_SET);
+
+	input = (uint8_t*)malloc(sizeof(uint8_t) * in_data_size);
+
+	read_length = fread(input, sizeof(uint8_t), chunk_size, in);
+
+	i = 1;
+	while(read_length == chunk_size){
+		read_length = fread(input + i * chunk_size, sizeof(uint8_t), chunk_size, in);
+		i++;
+	}
+
+//	printf("%s\n", input);
+}
+
+void writeOutputData(FILE* out){
+
+	fwrite(output, sizeof(uint8_t), out_data_size, out);
+
 }
