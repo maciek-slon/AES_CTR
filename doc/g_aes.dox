@@ -1,0 +1,26 @@
+/*!
+ 
+ \defgroup g_aes AES cipher algorithm
+ 
+ \brief All members vital for AES algorithm.
+ 
+ Contains global structures (holding key, data to cipher/decipher etc),
+ as well as for local (per-thread) work (known as state in AES).
+ 
+ 
+ */
+ 
+/*!
+
+ \defgroup g_aes_global AES global data handling
+ \ingroup g_aes
+ 
+ */
+ 
+/*!
+
+ \defgroup g_aes_cipher AES cipher/decipher functions
+ \ingroup g_aes
+ 
+ */ 
+  
