@@ -18,6 +18,10 @@ TARGET_LINK_LIBRARIES(aes_ctr m)
 ADD_EXECUTABLE(b64 b64.c)
 
 
+ADD_EXECUTABLE(aes_test test.c aes.c)
+TARGET_LINK_LIBRARIES(aes_test m)
+
+
 install(
   TARGETS aes_ctr b64
   RUNTIME DESTINATION bin

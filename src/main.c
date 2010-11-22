@@ -14,8 +14,11 @@
 #include "timer.h"
 #include "aes.h"
 
-
-int main(int argc, char** argv) {
+/*!
+ * Entry point for project.
+ */
+int main(int argc, char** argv)
+{
 	timespec_t timer;
 	int key_size;
 	aes_global_t data;
@@ -23,25 +26,28 @@ int main(int argc, char** argv) {
 	int i;
 	double t1, t2, t3;
 
-	if(argc < 4){
+	if (argc < 4)
+	{
 		printf("Usage: AES_CTR <key_length> <input_file> <output_file>");
-		return(0);
+		return (0);
 	}
 
 	key_size = atoi(argv[1]);
-	if(key_size!=128 && key_size!=192 && key_size!=256){
+	if (key_size != 128 && key_size != 192 && key_size != 256)
+	{
 		printf("Key should be 128, 192 or 256 bit only\n");
-		return(0);
+		return (0);
 	}
 
 	timerRestart(&timer);
 
 	aesResetGlobalData(&data);
-	aesInitGlobalData(&data, argv[2], key_size);
+	aesInitGlobalData(&data, key_size);
+	aesPrepareCipherFromFile(&data, argv[2]);
 
 	t1 = timerElapsedRestart(&timer);
 
-	for (i=0; i < 51; ++i)
+	for (i = 0; i < 51; ++i)
 		aesCipher(&data, c);
 
 	t2 = timerElapsedRestart(&timer);
@@ -51,9 +57,9 @@ int main(int argc, char** argv) {
 
 	t3 = timerElapsedRestart(&timer);
 
-	printf( "Fill buffer:  %1.5lfs\n"
-			"Cipher:       %1.5lfs\n"
-			"Store result: %1.5lfs\n", t1, t2, t3);
+	printf("Fill buffer:  %1.5lfs\n"
+		"Cipher:       %1.5lfs\n"
+		"Store result: %1.5lfs\n", t1, t2, t3);
 
 	return (0);
 }
