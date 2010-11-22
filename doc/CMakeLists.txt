@@ -18,7 +18,6 @@ if(DOXYGEN_EXECUTABLE)
     # (Linux experimentation indicates this is a no-op if the empty or
     # non-empty directory already exists.)
     file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/doc/html)
-    file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/doc/html/images)
     
     CONFIGURE_FILE(AES_CTR.Doxyfile.in ${CMAKE_BINARY_DIR}/AES_CTR.Doxyfile @ONLY)
     

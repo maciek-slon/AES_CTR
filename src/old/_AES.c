@@ -5,7 +5,7 @@
  *      Author: szkudi
  */
 
-#include "AES.h"
+#include "_AES.h"
 #include <omp.h>
 
 // xtime is a macro that finds the product of {02} and the argument to xtime modulo {1b}
