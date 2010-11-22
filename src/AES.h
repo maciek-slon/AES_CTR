@@ -8,9 +8,8 @@
 #ifndef AES_CTR_H_
 #define AES_CTR_H_
 
-#define DEBUG
+//#define DEBUG
 
-#include <stdint.h>
 #include "matrices.h"
 #include <sys/time.h>
 #include <stdio.h>
@@ -18,6 +17,7 @@
 #include <math.h>
 #include <stdlib.h>
 
+#include <stdint.h>
 
 //typedef struct _AES_data{
 /*

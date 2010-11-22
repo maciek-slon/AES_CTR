@@ -6,7 +6,10 @@
  */
 
 #ifndef MATRICES_H_
-#define MATRICES_H__
+#define MATRICES_H_
+
+
+#include <stdint.h>
 
 static const uint8_t sbox[256] =
     //0     1    2      3     4    5     6     7      8    9     A      B    C     D     E     F
