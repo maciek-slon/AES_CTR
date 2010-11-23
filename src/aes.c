@@ -247,7 +247,7 @@ void aesMixColumns(aes_state_t * state) {
 }
 
 void aesCipherBlock(aes_global_t * data, aes_state_t * state) {
-    int i, j, rd=0;
+    int rd=0;
 
     // Add the First round key to the state before starting the rounds.
     aesAddRoundKey(data, state, 0);
@@ -273,7 +273,6 @@ void aesCipherBlock(aes_global_t * data, aes_state_t * state) {
 aes_state_t aesCipherCounter(aes_global_t * data, uint32_t ctr) {
     aes_state_t state;
     uint32_t d[4];
-    uint32_t *s32 = (uint32_t*)state.s;
 
     // prepare counter value
     d[0] = data->nonce_0;
@@ -294,7 +293,6 @@ void aesCipher(aes_global_t * data, uint32_t c)
 	uint8_t * in_ptr = data->in_data;
 	uint32_t * in_ptr32 = (uint32_t*) in_ptr;
 
-	uint32_t in_size = data->in_size;
 	uint32_t in_blocks = data->in_blocks;
 
 	#pragma omp parallel for default(none) private(i) shared(in_blocks, in_ptr32, c)
