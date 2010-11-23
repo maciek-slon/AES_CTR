@@ -2,6 +2,8 @@
 
 #include <assert.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #if defined(NO_COLORS)
 	#define WHITE_COL
@@ -27,11 +29,28 @@
 				return 1;\
 			} else {\
 				printf(PASSED_COL "PASSED.\n" WHITE_COL);\
+				printf("-----------------------------------------------------\n");\
 			}
 
-#define RUN_TEST(name, func, arg1, arg2, arg3) \
+#define RUN_TEST_5(name, func, arg1, arg2, arg3, arg4, arg5) \
+			printf("\t" name);\
+			if (func(arg1, arg2, arg3, arg4, arg5)) {\
+				printf(ERROR_COL "ERROR!\n"WHITE_COL);\
+				return 1;\
+			} \
+			printf(OK_COL "OK.\n"WHITE_COL);
+
+#define RUN_TEST_3(name, func, arg1, arg2, arg3) \
 			printf("\t" name);\
 			if (func(arg1, arg2, arg3)) {\
+				printf(ERROR_COL "ERROR!\n"WHITE_COL);\
+				return 1;\
+			} \
+			printf(OK_COL "OK.\n"WHITE_COL);
+
+#define RUN_TEST_2(name, func, arg1, arg2) \
+			printf("\t" name);\
+			if (func(arg1, arg2)) {\
 				printf(ERROR_COL "ERROR!\n"WHITE_COL);\
 				return 1;\
 			} \
@@ -150,12 +169,137 @@ int test_1() {
 						0x4e, 0x5a, 0x66, 0x99, 0xa9, 0xf2, 0x4f, 0xe0, 0x7e, 0x57, 0x2b, 0xaa, 0xcd, 0xf8, 0xcd, 0xea,
 						0x24, 0xfc, 0x79, 0xcc, 0xbf, 0x09, 0x79, 0xe9, 0x37, 0x1a, 0xc2, 0x3c, 0x6d, 0x68, 0xde, 0x36 };
 
-	RUN_TEST("128bit::1...", test_key, akey_1, rkey_1, 128);
-	RUN_TEST("128bit::2...", test_key, akey_2, rkey_2, 128);
+	RUN_TEST_3("128bit::1...", test_key, akey_1, rkey_1, 128);
+	RUN_TEST_3("128bit::2...", test_key, akey_2, rkey_2, 128);
 
-	RUN_TEST("192bit::1...", test_key, akey_4, rkey_4, 192);
+	RUN_TEST_3("192bit::1...", test_key, akey_4, rkey_4, 192);
 
-	RUN_TEST("256bit::1...", test_key, akey_7, rkey_7, 256);
+	RUN_TEST_3("256bit::1...", test_key, akey_7, rkey_7, 256);
+
+	return 0;
+}
+
+
+
+
+
+
+
+
+
+
+int test_mix(aes_state_t sa, aes_state_t sg) {
+	aesMixColumns(&sa);
+	int result = memcmp(sa.s, sg.s, 16);
+
+	//printf("\n");
+	//memprint(sa.s, 16, 4);
+	//memprint(sg.s, 16, 4);
+
+	return result;
+}
+
+int test_2() {
+	aes_state_t sa_1 = { {  0x01, 0xc6, 0xdb, 0xf2,
+							0x01, 0xc6, 0x13, 0x0a,
+							0x01, 0xc6, 0x53, 0x22,
+							0x01, 0xc6, 0x45, 0x5c } };
+
+	aes_state_t sg_1 = { {  0x01, 0xc6, 0x8e, 0x9f,
+							0x01, 0xc6, 0x4d, 0xdc,
+							0x01, 0xc6, 0xa1, 0x58,
+							0x01, 0xc6, 0xbc, 0x9d } };
+
+	RUN_TEST_2("1...", test_mix, sa_1, sg_1);
+
+	return 0;
+}
+
+
+
+int test_shift(aes_state_t sa, aes_state_t sg) {
+	aesShiftRows(&sa);
+	int result = memcmp(sa.s, sg.s, 16);
+
+	printf("\n");
+	memprint(sa.s, 16, 4);
+	memprint(sg.s, 16, 4);
+
+	return result;
+}
+
+int test_3() {
+	aes_state_t sa_1 = { {  0x01, 0xc6, 0xdb, 0xf2,
+							0x01, 0xc6, 0x13, 0x0a,
+							0x01, 0xc6, 0x53, 0x22,
+							0x01, 0xc6, 0x45, 0x5c } };
+
+	aes_state_t sg_1 = { {  0x01, 0xc6, 0xdb, 0xf2,
+							0xc6, 0x13, 0x0a, 0x01,
+							0x53, 0x22, 0x01, 0xc6,
+							0x5c, 0x01, 0xc6, 0x45} };
+
+	RUN_TEST_2("1...", test_shift, sa_1, sg_1);
+
+	return 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+int test_ctr(uint8_t * iv, uint8_t * dt, uint8_t * res, uint8_t * key, int key_size) {
+	int result;
+	uint32_t * s32;
+	uint32_t * d32;
+	uint32_t r32[4];
+	aes_global_t data;
+	aes_state_t state;
+
+	aesInitGlobalData(&data, key_size);
+	aesKeyExpansion(&data, key);
+
+	memcpy(state.s, iv, 16);
+
+	printf("\n");
+	memprint(state.s, 16, 16);
+	aesCipherBlock(&data, &state);
+	memprint(state.s, 16, 16);
+
+	s32 = (uint32_t*)state.s;
+	d32 = (uint32_t*)dt;
+	r32[0] = d32[0] ^ s32[0];
+	r32[1] = d32[1] ^ s32[1];
+	r32[2] = d32[2] ^ s32[2];
+	r32[3] = d32[3] ^ s32[3];
+
+	result = memcmp(res, state.s, 16);
+
+//	aesFreeGlobalData(&data);
+
+	return result;
+}
+
+int test_5() {
+	uint8_t key_1[] = {0x8e, 0x73, 0xb0, 0xf7, 0xda, 0x0e, 0x64, 0x52, 0xc8, 0x10, 0xf3, 0x2b, 0x80, 0x90, 0x79, 0xe5, 0x62, 0xf8, 0xea, 0xd2, 0x52, 0x2c, 0x6b, 0x7b };
+
+	uint8_t iv_1[] = {0xf0, 0xf1, 0xf2, 0xf3, 0xf4, 0xf5, 0xf6, 0xf7, 0xf8, 0xf9, 0xfa, 0xfb, 0xfc, 0xfd, 0xfe, 0xff };
+	uint8_t dt_1[] = {0x6b, 0xc1, 0xbe, 0xe2, 0x2e, 0x40, 0x9f, 0x96, 0xe9, 0x3d, 0x7e, 0x11, 0x73, 0x93, 0x17, 0x2a };
+	uint8_t rs_1[] = {0x1a, 0xbc, 0x93, 0x24, 0x17, 0x52, 0x1c, 0xa2, 0x4f, 0x2b, 0x04, 0x59, 0xfe, 0x7e, 0x6e, 0x0b };
+
+	RUN_TEST_5("192bit::1...", test_ctr, iv_1, dt_1, rs_1, key_1, 192);
 
 	return 0;
 }
@@ -164,6 +308,13 @@ int main(int argc, char** argv) {
 
 
 	RUN_SUITE("Test key schedule algorithm", test_1);
+	RUN_SUITE("Test mix columns", test_2);
+	RUN_SUITE("Test shift rows", test_3);
+
+
+
+
+	RUN_SUITE("Test AES CTR block cipher", test_5);
 
 
 	return 0;

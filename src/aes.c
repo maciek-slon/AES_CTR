@@ -159,9 +159,118 @@ void aesKeyExpansion(aes_global_t * data, uint8_t * key)
 
 
 
+void aesAddRoundKey(aes_global_t * data, aes_state_t * state, int round){
+
+    /*int i;
+    uint32_t *s32 = (uint32_t*)state->s;
+    uint32_t *r32 = (uint32_t*)data->round_key;
+    int Nb = data->Nb;
+
+   	s32[0] ^= r32[round * Nb + 0];
+   	s32[1] ^= r32[round * Nb + 1];
+   	s32[2] ^= r32[round * Nb + 2];
+   	s32[3] ^= r32[round * Nb + 3];*/
+
+	int i,j;
+	for(i=0; i<4; i++){
+		for(j=0; j<4; j++){
+			state->s[i*4+j] ^= data->round_key[round * data->Nb * 4 + i * data->Nb + j];
+		}
+	}
+}
 
 
+void aesSubBytes(aes_state_t * state) {
+	uint8_t * s = state->s;
+    int i;
+    for(i=0; i<16; i++) {
+        s[i] = sbox[s[i]];
+    }
+}
 
+uint32_t rol(const uint32_t value, int places) {
+	return ((value << places) & 0xFFFFFFFF) | ((value >> (sizeof(uint32_t)*8 - places) & 0xFFFFFFFF));
+}
+
+// The ShiftRows() function shifts the rows in the state to the left.
+// Each row is shifted with different offset.
+// Offset = Row number. So the first row is not shifted.
+void aesShiftRows(aes_state_t * state) {
+
+    uint32_t *s32 = (uint32_t*)state->s;
+
+    s32[1] = rol(s32[1], 24);
+    s32[2] = rol(s32[2], 16);
+    s32[3] = rol(s32[3], 8);
+}
+
+// MixColumns function mixes the columns of the state matrix
+// The method used may look complicated, but it is easy if you know the underlying theory.
+// Refer the documents specified above.
+void aesMixColumns(aes_state_t * state) {
+	int i;
+	uint8_t * s = state->s;
+	for (i = 0; i < 4; ++i) {
+        uint8_t a[4];
+        uint8_t b[4];
+        uint8_t c;
+        uint8_t h;
+		/* The array 'a' is simply a copy of the input array 'r'
+			 * The array 'b' is each element of the array 'a' multiplied by 2
+			 * in Rijndael's Galois field
+			 * a[n] ^ b[n] is element n multiplied by 3 in Rijndael's Galois field */
+		for(c=0;c<4;c++) {
+			a[c] = s[c*4+i];
+			h = a[c] & 0x80; /* hi bit */
+			b[c] = a[c] << 1;
+			if(h == 0x80)
+				b[c] ^= 0x1B; /* Rijndael's Galois field */
+		}
+		s[0+i] = b[0] ^ a[3] ^ a[2] ^ b[1] ^ a[1]; /* 2 * a0 + a3 + a2 + 3 * a1 */
+		s[4+i] = b[1] ^ a[0] ^ a[3] ^ b[2] ^ a[2]; /* 2 * a1 + a0 + a3 + 3 * a2 */
+		s[8+i] = b[2] ^ a[1] ^ a[0] ^ b[3] ^ a[3]; /* 2 * a2 + a1 + a0 + 3 * a3 */
+		s[12+i] = b[3] ^ a[2] ^ a[1] ^ b[0] ^ a[0]; /* 2 * a3 + a2 + a1 + 3 * a0 */
+	}
+}
+
+void aesCipherBlock(aes_global_t * data, aes_state_t * state) {
+    int i, j, rd=0;
+
+    // Add the First round key to the state before starting the rounds.
+    aesAddRoundKey(data, state, 0);
+
+    // There will be Nr rounds.
+    // The first Nr-1 rounds are identical.
+    // These Nr-1 rounds are executed in the loop below.
+    for(rd = 1; rd < data->Nr; rd++)
+    {
+        aesSubBytes(state);
+        aesShiftRows(state);
+        aesMixColumns(state);
+        aesAddRoundKey(data, state, rd);
+    }
+
+    // The last round is given below.
+    // The MixColumns function is not here in the last round.
+    aesSubBytes(state);
+    aesShiftRows(state);
+    aesAddRoundKey(data, state, data->Nr);
+}
+
+aes_state_t aesCipherCounter(aes_global_t * data, uint32_t ctr) {
+    aes_state_t state;
+    uint32_t *s32 = (uint32_t*)state.s;
+
+    // prepare counter value
+    s32[0] = data->nonce_0;
+    s32[1] = data->nonce_1;
+    s32[2] = 0;
+    s32[3] = ctr;
+
+    aesCipherBlock(data, &state);
+
+    return state;
+}
 
 void aesCipher(aes_global_t * data, uint32_t c)
 {

@@ -40,6 +40,12 @@ typedef struct aes_global_s
 	uint8_t * round_key;
 	/// Round key size in words (which is Nb*(Nr+1))
 	uint8_t round_key_size;
+
+	// nonce
+	/// First part of nonce
+	uint32_t nonce_0;
+	/// Second part of nonce
+	uint32_t nonce_1;
 } aes_global_t;
 
 /*!
@@ -94,6 +100,24 @@ void aesStoreResult(aes_global_t * data, const char * out_file);
  * The round keys are used in each round to encrypt the states.
  */
 void aesKeyExpansion(aes_global_t * data, uint8_t * key);
+
+
+
+
+
+
+typedef struct aes_state_s {
+	uint8_t s[16];
+} aes_state_t;
+
+void aesMixColumns(aes_state_t * state);
+
+void aesShiftRows(aes_state_t * state);
+
+void aesCipherBlock(aes_global_t * data, aes_state_t * state);
+
+aes_state_t aesCipherCounter(aes_global_t * data, uint32_t ctr);
+
 
 /*!
  * Cipher data.
