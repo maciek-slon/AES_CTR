@@ -1,9 +1,19 @@
+/*!
+ * \file
+ * \brief Unit testing
+ */
 #include "aes.h"
 
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+/*!
+ * \defgroup testing Unit testing
+ * \brief Unit tests of key program functionalities
+ */
+/*@{*/
 
 #if defined(NO_COLORS)
 	#define WHITE_COL
@@ -58,19 +68,32 @@
 			printf(OK_COL "OK.\n"WHITE_COL);
 
 
+/// Flag for switching between normal and verbose mode
+int verbose;
 
-
-
+/*!
+ * Print memory content in formatted way.
+ *
+ * If verbose flag is not set, then this function prints nothing.
+ *
+ * @param ptr memory to print
+ * @param size size of data to print
+ * @param width length of single output row
+ */
 void memprint(uint8_t * ptr, int size, int width) {
 	int i;
+
+	if (!verbose)
+		return;
+
+	printf("\n");
+
 	for (i = 0; i < size; ++i) {
 		printf("%02x ", ptr[i]);
 		if ( ! ((i+1) % width) )
 			printf("\n");
 	}
 }
-
-
 
 /*!
  * Generate round key and compare it with expected result.
@@ -91,12 +114,10 @@ int test_key(uint8_t * akey, uint8_t * rkey, int key_size) {
 
 
 	result = memcmp(data.round_key, rkey, data.round_key_size);
-/*
-	printf("test 1: %d\n", result);
 
 	memprint(rkey, data.round_key_size, 16);
 	memprint(data.round_key, data.round_key_size, 16);
-*/
+
 
 	aesFreeGlobalData(&data);
 
@@ -107,7 +128,8 @@ int test_key(uint8_t * akey, uint8_t * rkey, int key_size) {
  * Test aesKeyExpansion function on some test vectors for 128, 192 and 256 bit keys.
  *
  * Test vectors were obtained from http://www.samiam.org/key-schedule.html
- * @return
+ *
+ * @return 0 on success
  */
 int test_1() {
 	//
@@ -192,26 +214,29 @@ int test_1() {
 	return 0;
 }
 
-
-
-
-
-
-
-
-
-
+/*!
+ * Mix columns in given state and compare output with expected result.
+ *
+ * @param sa state to test
+ * @param sg expected output
+ *
+ * @return 0 on success
+ */
 int test_mix(aes_state_t sa, aes_state_t sg) {
 	aesMixColumns(&sa);
 	int result = memcmp(sa.s, sg.s, 16);
 
-	//printf("\n");
-	//memprint(sa.s, 16, 4);
-	//memprint(sg.s, 16, 4);
+	memprint(sa.s, 16, 4);
+	memprint(sg.s, 16, 4);
 
 	return result;
 }
 
+/*!
+ * Test aesMixColumns function.
+ *
+ * @return 0 on success
+ */
 int test_2() {
 	aes_state_t sa_1 = { {  0x01, 0xc6, 0xdb, 0xf2,
 							0x01, 0xc6, 0x13, 0x0a,
@@ -228,19 +253,29 @@ int test_2() {
 	return 0;
 }
 
-
-
+/*!
+ * Shift rows in given state and compare output with expected result.
+ *
+ * @param sa state to test
+ * @param sg expected output
+ *
+ * @return 0 on success
+ */
 int test_shift(aes_state_t sa, aes_state_t sg) {
 	aesShiftRows(&sa);
 	int result = memcmp(sa.s, sg.s, 16);
 
-//	printf("\n");
-//	memprint(sa.s, 16, 4);
-//	memprint(sg.s, 16, 4);
+	memprint(sa.s, 16, 4);
+	memprint(sg.s, 16, 4);
 
 	return result;
 }
 
+/*!
+ * Test aesShiftRows function.
+ *
+ * @return 0 on success
+ */
 int test_3() {
 	aes_state_t sa_1 = { {  0x01, 0xc6, 0xdb, 0xf2,
 							0x01, 0xc6, 0x13, 0x0a,
@@ -257,22 +292,17 @@ int test_3() {
 	return 0;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+/*!
+ * Cipher block of data in CTR mode and compare result with expected output.
+ *
+ * @param iv initialization vector (i.e. counter value)
+ * @param dt data to cipher
+ * @param rs expected result
+ * @param key cipher key (have to be
+ * @param key_size key size in bits (128, 192 or 256)
+ *
+ * @return 0 on success
+ */
 int test_ctr(uint8_t * iv, uint8_t * dt, uint8_t * rs, uint8_t * key, int key_size) {
 	int result;
 	uint32_t * s32;
@@ -289,10 +319,9 @@ int test_ctr(uint8_t * iv, uint8_t * dt, uint8_t * rs, uint8_t * key, int key_si
 	aesFillState(&res, rs);
 	aesFillState(&dat, dt);
 
-//	printf("\n");
-//	memprint(state.s, 16, 16);
+	memprint(state.s, 16, 16);
 	aesCipherBlock(&data, &state);
-//	memprint(state.s, 16, 16);
+	memprint(state.s, 16, 16);
 
 	s32 = (uint32_t*)state.s;
 	d32 = (uint32_t*)dat.s;
@@ -308,6 +337,13 @@ int test_ctr(uint8_t * iv, uint8_t * dt, uint8_t * rs, uint8_t * key, int key_si
 	return result;
 }
 
+/*!
+ * Test aesCipherBlock function.
+ *
+ * Test vectors were obtained from NIST Special Publication 800-38A "Recommendation for Block Cipher Modes of Operation"
+ *
+ * @return 0 on success
+ */
 int test_5() {
 	uint8_t key_1[] = {0x8e, 0x73, 0xb0, 0xf7, 0xda, 0x0e, 0x64, 0x52, 0xc8, 0x10, 0xf3, 0x2b, 0x80, 0x90, 0x79, 0xe5, 0x62, 0xf8, 0xea, 0xd2, 0x52, 0x2c, 0x6b, 0x7b };
 
@@ -320,20 +356,25 @@ int test_5() {
 	return 0;
 }
 
+/*@}*/
 
-
-
-
-
+/*!
+ * Main function. Calls all tests.
+ *
+ * @param argc number of arguments passed
+ * @param argv command line arguments
+ *
+ * @return 0 on success
+ */
 int main(int argc, char** argv) {
-
+	if (argc > 1 && strcmp(argv[1], "-v") == 0)
+		verbose = 1;
+	else
+		verbose = 0;
 
 	RUN_SUITE("Test key schedule algorithm", test_1);
 	RUN_SUITE("Test mix columns", test_2);
 	RUN_SUITE("Test shift rows", test_3);
-
-
-
 
 	RUN_SUITE("Test AES CTR block cipher", test_5);
 
