@@ -155,26 +155,12 @@ void aesKeyExpansion(aes_global_t * data, uint8_t * key)
     data->round_key = RoundKey;
 }
 
-
-
-
-
 void aesFillState(aes_state_t * state, uint8_t * data) {
-	int i;
-	for (i = 0; i < 4; ++i) {
-		state->s[ 0 + i] = data[4*i + 0];
-		state->s[ 4 + i] = data[4*i + 1];
-		state->s[ 8 + i] = data[4*i + 2];
-		state->s[12 + i] = data[4*i + 3];
-	}
+	memcpy(state->s, data, 16);
 }
-
-
-
 
 void aesAddRoundKey(aes_global_t * data, aes_state_t * state, int round){
 
-    /*int i;
     uint32_t *s32 = (uint32_t*)state->s;
     uint32_t *r32 = (uint32_t*)data->round_key;
     int Nb = data->Nb;
@@ -182,14 +168,7 @@ void aesAddRoundKey(aes_global_t * data, aes_state_t * state, int round){
    	s32[0] ^= r32[round * Nb + 0];
    	s32[1] ^= r32[round * Nb + 1];
    	s32[2] ^= r32[round * Nb + 2];
-   	s32[3] ^= r32[round * Nb + 3];*/
-
-	int i,j;
-	for(i=0; i<4; i++){
-		for(j=0; j<4; j++){
-			state->s[j*4+i] ^= data->round_key[round * data->Nb * 4 + i * data->Nb + j];
-		}
-	}
+   	s32[3] ^= r32[round * Nb + 3];
 }
 
 
@@ -210,11 +189,27 @@ uint32_t rol(const uint32_t value, int places) {
 // Offset = Row number. So the first row is not shifted.
 void aesShiftRows(aes_state_t * state) {
 
-    uint32_t *s32 = (uint32_t*)state->s;
+    uint8_t *s = state->s;
+    uint8_t tmp;
 
-    s32[1] = rol(s32[1], 24);
-    s32[2] = rol(s32[2], 16);
-    s32[3] = rol(s32[3], 8);
+    tmp = s[1];
+    s[1] = s[5];
+    s[5] = s[9];
+    s[9] = s[13];
+    s[13] = tmp;
+
+    tmp = s[2];
+    s[2] = s[10];
+    s[10] = tmp;
+    tmp = s[6];
+    s[6] = s[14];
+    s[14] = tmp;
+
+    tmp = s[15];
+	s[15] = s[11];
+	s[11] = s[7];
+	s[7] = s[3];
+	s[3] = tmp;
 }
 
 // MixColumns function mixes the columns of the state matrix
@@ -229,20 +224,20 @@ void aesMixColumns(aes_state_t * state) {
         uint8_t c;
         uint8_t h;
 		/* The array 'a' is simply a copy of the input array 'r'
-			 * The array 'b' is each element of the array 'a' multiplied by 2
-			 * in Rijndael's Galois field
-			 * a[n] ^ b[n] is element n multiplied by 3 in Rijndael's Galois field */
+		 * The array 'b' is each element of the array 'a' multiplied by 2
+		 * in Rijndael's Galois field
+		 * a[n] ^ b[n] is element n multiplied by 3 in Rijndael's Galois field */
 		for(c=0;c<4;c++) {
-			a[c] = s[c*4+i];
+			a[c] = s[i*4+c];
 			h = a[c] & 0x80; /* hi bit */
 			b[c] = a[c] << 1;
 			if(h == 0x80)
 				b[c] ^= 0x1B; /* Rijndael's Galois field */
 		}
-		s[0+i] = b[0] ^ a[3] ^ a[2] ^ b[1] ^ a[1]; /* 2 * a0 + a3 + a2 + 3 * a1 */
-		s[4+i] = b[1] ^ a[0] ^ a[3] ^ b[2] ^ a[2]; /* 2 * a1 + a0 + a3 + 3 * a2 */
-		s[8+i] = b[2] ^ a[1] ^ a[0] ^ b[3] ^ a[3]; /* 2 * a2 + a1 + a0 + 3 * a3 */
-		s[12+i] = b[3] ^ a[2] ^ a[1] ^ b[0] ^ a[0]; /* 2 * a3 + a2 + a1 + 3 * a0 */
+		s[i*4+0] = b[0] ^ a[3] ^ a[2] ^ b[1] ^ a[1]; /* 2 * a0 + a3 + a2 + 3 * a1 */
+		s[i*4+1] = b[1] ^ a[0] ^ a[3] ^ b[2] ^ a[2]; /* 2 * a1 + a0 + a3 + 3 * a2 */
+		s[i*4+2] = b[2] ^ a[1] ^ a[0] ^ b[3] ^ a[3]; /* 2 * a2 + a1 + a0 + 3 * a3 */
+		s[i*4+3] = b[3] ^ a[2] ^ a[1] ^ b[0] ^ a[0]; /* 2 * a3 + a2 + a1 + 3 * a0 */
 	}
 }
 
