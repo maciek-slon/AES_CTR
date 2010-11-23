@@ -110,6 +110,8 @@ typedef struct aes_state_s {
 	uint8_t s[16];
 } aes_state_t;
 
+void aesFillState(aes_state_t * state, uint8_t * data);
+
 void aesMixColumns(aes_state_t * state);
 
 void aesShiftRows(aes_state_t * state);

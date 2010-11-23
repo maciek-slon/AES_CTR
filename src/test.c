@@ -22,6 +22,7 @@
 #endif
 
 
+
 #define RUN_SUITE(name, func) \
 			printf(SUITE_COL name "\n" WHITE_COL);\
 			if (func()) {\
@@ -60,7 +61,6 @@
 
 
 
-
 void memprint(uint8_t * ptr, int size, int width) {
 	int i;
 	for (i = 0; i < size; ++i) {
@@ -70,6 +70,17 @@ void memprint(uint8_t * ptr, int size, int width) {
 	}
 }
 
+
+
+/*!
+ * Generate round key and compare it with expected result.
+ *
+ * @param akey key to expand
+ * @param rkey expected round key
+ * @param key_size key size in bits (128, 192 or 256)
+ *
+ * @return 0 on success
+ */
 int test_key(uint8_t * akey, uint8_t * rkey, int key_size) {
 	aes_global_t data;
 	int result;
@@ -86,6 +97,8 @@ int test_key(uint8_t * akey, uint8_t * rkey, int key_size) {
 	memprint(rkey, data.round_key_size, 16);
 	memprint(data.round_key, data.round_key_size, 16);
 */
+
+	aesFreeGlobalData(&data);
 
 	return result;
 }
@@ -221,9 +234,9 @@ int test_shift(aes_state_t sa, aes_state_t sg) {
 	aesShiftRows(&sa);
 	int result = memcmp(sa.s, sg.s, 16);
 
-	printf("\n");
-	memprint(sa.s, 16, 4);
-	memprint(sg.s, 16, 4);
+//	printf("\n");
+//	memprint(sa.s, 16, 4);
+//	memprint(sg.s, 16, 4);
 
 	return result;
 }
@@ -260,34 +273,37 @@ int test_3() {
 
 
 
-int test_ctr(uint8_t * iv, uint8_t * dt, uint8_t * res, uint8_t * key, int key_size) {
+int test_ctr(uint8_t * iv, uint8_t * dt, uint8_t * rs, uint8_t * key, int key_size) {
 	int result;
 	uint32_t * s32;
 	uint32_t * d32;
-	uint32_t r32[4];
+	uint32_t * r32;
 	aes_global_t data;
-	aes_state_t state;
+	aes_state_t state, res, dat;
 
+	aesResetGlobalData(&data);
 	aesInitGlobalData(&data, key_size);
 	aesKeyExpansion(&data, key);
 
-	memcpy(state.s, iv, 16);
+	aesFillState(&state, iv);
+	aesFillState(&res, rs);
+	aesFillState(&dat, dt);
 
-	printf("\n");
-	memprint(state.s, 16, 16);
+//	printf("\n");
+//	memprint(state.s, 16, 16);
 	aesCipherBlock(&data, &state);
-	memprint(state.s, 16, 16);
+//	memprint(state.s, 16, 16);
 
 	s32 = (uint32_t*)state.s;
-	d32 = (uint32_t*)dt;
-	r32[0] = d32[0] ^ s32[0];
-	r32[1] = d32[1] ^ s32[1];
-	r32[2] = d32[2] ^ s32[2];
-	r32[3] = d32[3] ^ s32[3];
+	d32 = (uint32_t*)dat.s;
+	s32[0] = d32[0] ^ s32[0];
+	s32[1] = d32[1] ^ s32[1];
+	s32[2] = d32[2] ^ s32[2];
+	s32[3] = d32[3] ^ s32[3];
 
-	result = memcmp(res, state.s, 16);
+	result = memcmp(res.s, state.s, 16);
 
-//	aesFreeGlobalData(&data);
+	aesFreeGlobalData(&data);
 
 	return result;
 }
@@ -303,6 +319,11 @@ int test_5() {
 
 	return 0;
 }
+
+
+
+
+
 
 int main(int argc, char** argv) {
 

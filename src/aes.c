@@ -159,6 +159,19 @@ void aesKeyExpansion(aes_global_t * data, uint8_t * key)
 
 
 
+void aesFillState(aes_state_t * state, uint8_t * data) {
+	int i;
+	for (i = 0; i < 4; ++i) {
+		state->s[ 0 + i] = data[4*i + 0];
+		state->s[ 4 + i] = data[4*i + 1];
+		state->s[ 8 + i] = data[4*i + 2];
+		state->s[12 + i] = data[4*i + 3];
+	}
+}
+
+
+
+
 void aesAddRoundKey(aes_global_t * data, aes_state_t * state, int round){
 
     /*int i;
@@ -174,7 +187,7 @@ void aesAddRoundKey(aes_global_t * data, aes_state_t * state, int round){
 	int i,j;
 	for(i=0; i<4; i++){
 		for(j=0; j<4; j++){
-			state->s[i*4+j] ^= data->round_key[round * data->Nb * 4 + i * data->Nb + j];
+			state->s[j*4+i] ^= data->round_key[round * data->Nb * 4 + i * data->Nb + j];
 		}
 	}
 }
@@ -259,13 +272,16 @@ void aesCipherBlock(aes_global_t * data, aes_state_t * state) {
 
 aes_state_t aesCipherCounter(aes_global_t * data, uint32_t ctr) {
     aes_state_t state;
+    uint32_t d[4];
     uint32_t *s32 = (uint32_t*)state.s;
 
     // prepare counter value
-    s32[0] = data->nonce_0;
-    s32[1] = data->nonce_1;
-    s32[2] = 0;
-    s32[3] = ctr;
+    d[0] = data->nonce_0;
+    d[1] = data->nonce_1;
+    d[2] = 0;
+    d[3] = ctr;
+
+    aesFillState(&state, (uint8_t*)d);
 
     aesCipherBlock(data, &state);
 
