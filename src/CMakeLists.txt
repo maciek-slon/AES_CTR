@@ -22,7 +22,11 @@ ADD_EXECUTABLE(aes_test test.c aes.c)
 TARGET_LINK_LIBRARIES(aes_test m)
 
 
+ADD_EXECUTABLE(md5 md5driver.c md5.c)
+
+ADD_LIBRARY(hash_md5 SHARED hash_md5.c md5.c)
+
 install(
-  TARGETS aes_ctr b64
+  TARGETS aes_ctr b64 md5
   RUNTIME DESTINATION bin
 )
