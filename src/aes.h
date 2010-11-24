@@ -6,6 +6,7 @@
 #define AES_H_
 
 #include <stdint.h>
+#include <time.h>
 
 /*!
  * Global data used by AES algorithm.
@@ -47,6 +48,12 @@ typedef struct aes_global_s
 	/// Second part of nonce
 	uint32_t nonce_1;
 } aes_global_t;
+
+typedef struct aes_times_s {
+	struct timespec t1;
+	struct timespec t2;
+	struct timespec t3;
+} aes_times_t;
 
 /*!
  * Reset EAS global data structure.
@@ -99,7 +106,7 @@ void aesStoreResult(aes_global_t * data, const char * out_file);
  *
  * The round keys are used in each round to encrypt the states.
  */
-void aesKeyExpansion(aes_global_t * data, uint8_t * key);
+void aesKeyExpansion(aes_global_t * data, const uint8_t * key);
 
 
 
@@ -129,6 +136,8 @@ aes_state_t aesCipherCounter(aes_global_t * data, uint32_t ctr);
  *
  * \ingroup g_aes_cipher
  */
-void aesCipher(aes_global_t * data, uint32_t c);
+void aesCipherT(aes_global_t * data, uint32_t c);
+
+void aesCipher(const char * in_fname, const char * out_fname, int key_size, const uint8_t * key);
 
 #endif /* AES_H_ */

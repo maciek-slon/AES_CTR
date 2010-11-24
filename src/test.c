@@ -303,7 +303,7 @@ int test_3() {
  *
  * @return 0 on success
  */
-int test_ctr(uint8_t * iv, uint8_t * dt, uint8_t * rs, uint8_t * key, int key_size) {
+int test_ctr(uint8_t * iv, uint8_t * dt, uint8_t * rs, const uint8_t * key, int key_size) {
 	int result;
 	uint32_t * s32;
 	uint32_t * d32;

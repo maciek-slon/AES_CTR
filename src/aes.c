@@ -9,6 +9,13 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <string.h>
+
+
+uint32_t rol(const uint32_t value, int places) {
+	return ((value << places) & 0xFFFFFFFF) | ((value >> (sizeof(uint32_t)*8 - places) & 0xFFFFFFFF));
+}
+
 
 void aesResetGlobalData(aes_global_t * data)
 {
@@ -66,6 +73,9 @@ void aesPrepareCipherFromFile(aes_global_t * data, const char * in_file) {
 		perror("Can't read input file to buffer!");
 	}
 
+	data->nonce_0 = time(NULL);
+	data->nonce_1 = 1;
+
 	fclose(in_f);
 }
 
@@ -89,39 +99,40 @@ void aesStoreResult(aes_global_t * data, const char * out_file)
 	fclose(out_f);
 }
 
-void aesKeyExpansion(aes_global_t * data, uint8_t * key)
+void aesKeyExpansion(aes_global_t * data, const uint8_t * key)
 {
-    int i,j;
-    uint8_t temp[4], k;
+    int i;
+    uint8_t temp[4];
+    uint32_t * t32 = (uint32_t*)temp;
     uint8_t * RoundKey = (uint8_t*)malloc(sizeof(uint8_t) * data->round_key_size * 4);
+    uint32_t * r32 = (uint32_t*)RoundKey;
+
 
     // The first round key is the key itself.
-    for(i=0; i < data->Nk; i++){
-        RoundKey[i*4  ] = key[i*4  ];
-        RoundKey[i*4+1] = key[i*4+1];
-        RoundKey[i*4+2] = key[i*4+2];
-        RoundKey[i*4+3] = key[i*4+3];
-    }
+    memcpy(r32, key, data->Nk * 4);
 
+    i = data->Nk;
     // All other round keys are found from the previous round keys.
     while (i < data->round_key_size){
 
-        for(j=0;j<4;j++){
-            temp[j] = RoundKey[(i-1) * 4 + j];
-        }
+    	*t32 = r32[i-1];
+//        for(j=0;j<4;j++){
+//            temp[j] = RoundKey[(i-1) * 4 + j];
+//        }
 
         if (i % data->Nk == 0){
             // This function rotates the 4 bytes in a word to the left once.
             // [a0,a1,a2,a3] becomes [a1,a2,a3,a0]
 
             // Function RotWord()
-            {
-                k = temp[0];
-                temp[0] = temp[1];
-                temp[1] = temp[2];
-                temp[2] = temp[3];
-                temp[3] = k;
-            }
+        	*t32 = rol(*t32, 24);
+//            {
+//                k = temp[0];
+//                temp[0] = temp[1];
+//                temp[1] = temp[2];
+//                temp[2] = temp[3];
+//                temp[3] = k;
+//            }
 
             // SubWord() is a function that takes a four-byte input word and
             // applies the S-box to each of the four bytes to produce an output word.
@@ -145,10 +156,9 @@ void aesKeyExpansion(aes_global_t * data, uint8_t * key)
                 temp[3]=sbox[temp[3]];
             }
         }
-        RoundKey[i*4+0] = RoundKey[(i - data->Nk)*4+0] ^ temp[0];
-        RoundKey[i*4+1] = RoundKey[(i - data->Nk)*4+1] ^ temp[1];
-        RoundKey[i*4+2] = RoundKey[(i - data->Nk)*4+2] ^ temp[2];
-        RoundKey[i*4+3] = RoundKey[(i - data->Nk)*4+3] ^ temp[3];
+
+        r32[i] = r32[i-data->Nk] ^ *t32;
+
         i++;
     }
 
@@ -180,13 +190,10 @@ void aesSubBytes(aes_state_t * state) {
     }
 }
 
-uint32_t rol(const uint32_t value, int places) {
-	return ((value << places) & 0xFFFFFFFF) | ((value >> (sizeof(uint32_t)*8 - places) & 0xFFFFFFFF));
-}
-
 // The ShiftRows() function shifts the rows in the state to the left.
 // Each row is shifted with different offset.
 // Offset = Row number. So the first row is not shifted.
+// Note: in this implementation, "Rows" are vertical.
 void aesShiftRows(aes_state_t * state) {
 
     uint8_t *s = state->s;
@@ -234,6 +241,7 @@ void aesMixColumns(aes_state_t * state) {
 			if(h == 0x80)
 				b[c] ^= 0x1B; /* Rijndael's Galois field */
 		}
+
 		s[i*4+0] = b[0] ^ a[3] ^ a[2] ^ b[1] ^ a[1]; /* 2 * a0 + a3 + a2 + 3 * a1 */
 		s[i*4+1] = b[1] ^ a[0] ^ a[3] ^ b[2] ^ a[2]; /* 2 * a1 + a0 + a3 + 3 * a2 */
 		s[i*4+2] = b[2] ^ a[1] ^ a[0] ^ b[3] ^ a[3]; /* 2 * a2 + a1 + a0 + 3 * a3 */
@@ -282,7 +290,7 @@ aes_state_t aesCipherCounter(aes_global_t * data, uint32_t ctr) {
     return state;
 }
 
-void aesCipher(aes_global_t * data, uint32_t c)
+void aesCipherT(aes_global_t * data, uint32_t c)
 {
 	uint32_t i;
 	uint8_t * in_ptr = data->in_data;
@@ -299,3 +307,30 @@ void aesCipher(aes_global_t * data, uint32_t c)
 		in_ptr32[4 * i + 3] = in_ptr32[4 * i + 3] ^ c;
 	}
 }
+
+void aesCipher(const char * in_fname, const char * out_fname, int key_size, const uint8_t * key) {
+
+	aes_global_t data;
+	aes_times_t times;
+
+	aesResetGlobalData(&data);
+	aesInitGlobalData(&data, key_size);
+	aesPrepareCipherFromFile(&data, in_fname);
+	aesKeyExpansion(&data, key);
+
+	clock_gettime(CLOCK_REALTIME, &(times.t1));
+
+	/*for (i = 0; i < 51; ++i)
+		aesCipher(&data, c);*/
+
+	clock_gettime(CLOCK_REALTIME, &(times.t1));
+
+	aesStoreResult(&data, out_fname);
+	aesFreeGlobalData(&data);
+
+	clock_gettime(CLOCK_REALTIME, &(times.t1));
+}
+
+void aesDecipher(const char * in_fname, const char * out_fname, int key_size, const char * key) {
+}
+
