@@ -15,12 +15,27 @@
 
 #include <omp.h>
 
-#include "timer.h"
-#include "aes.h"
+#include "plugin.h"
 
 #define DIR_UNKNOWN  0
 #define DIR_CIPHER   1
 #define DIR_DECIPHER 2
+
+
+
+void memprint(uint8_t * ptr, int size, int width) {
+	int i;
+
+	printf("\n");
+
+	for (i = 0; i < size; ++i) {
+		printf("%02x ", ptr[i]);
+		if ( ! ((i+1) % width) )
+			printf("\n");
+	}
+}
+
+
 
 
 void printUsage(const char * exe) {
@@ -47,6 +62,12 @@ int main(int argc, char** argv)
 	char * algo = NULL;
 	char * generator = NULL;
 	int verbose = 0;
+	int failure = 0;
+	uint8_t genkey[32];
+
+
+	lib_hash_t lib_hash;
+
 
 	if (argc < 2) {
 		printUsage(argv[0]);
@@ -149,6 +170,11 @@ int main(int argc, char** argv)
 		return EXIT_FAILURE;
 	}
 
+	if (!key) {
+		printf("Key not specified!\n");
+		return EXIT_FAILURE;
+	}
+
 	if (!algo) {
 		algo = "aes";
 	}
@@ -156,6 +182,7 @@ int main(int argc, char** argv)
 	if (!generator) {
 		generator = "raw";
 	}
+
 
 	if (verbose) {
 		printf("Input file:    %s\n", in_fname);
@@ -167,50 +194,20 @@ int main(int argc, char** argv)
 		printf("Direction:     %s\n", direction == DIR_CIPHER ? "cipher" : "decipher");
 	}
 
-//	timespec_t timer;
-//	int key_size;
-//	aes_global_t data;
-//	volatile uint8_t c = 0xAA;
-//	int i;
-//	double t1, t2, t3;
 
-//	if (argc < 4)
-//	{
-//		printf("Usage: AES_CTR <key_length> <input_file> <output_file>");
-//		return (0);
-//	}
-//
-//	key_size = atoi(argv[1]);
-//	if (key_size != 128 && key_size != 192 && key_size != 256)
-//	{
-//		printf("Key size can be 128, 192 or 256 bit only\n");
-//		return (0);
-//	}
+	// find all required plugins
+	if (loadHashPlugin(generator, &lib_hash) != 0) {
+		printf("Unable to load key generator plugin.\n");
+		failure = 1;
+	}
 
-//	timerRestart(&timer);
-
-//	aesResetGlobalData(&data);
-//	aesInitGlobalData(&data, key_size);
-//	aesPrepareCipherFromFile(&data, argv[2]);
-//
-//	t1 = timerElapsedRestart(&timer);
-//
-//	for (i = 0; i < 51; ++i)
-//		aesCipher(&data, c);
-//
-//	t2 = timerElapsedRestart(&timer);
-//
-//	aesStoreResult(&data, argv[3]);
-//	aesFreeGlobalData(&data);
-//
-//	t3 = timerElapsedRestart(&timer);
-
-//	printf("Fill buffer:  %1.5lfs\n"
-//		"Cipher:       %1.5lfs\n"
-//		"Store result: %1.5lfs\n", t1, t2, t3);
+	lib_hash.hash(key, genkey, key_size / 8);
+	memprint(genkey, key_size / 8, 16);
 
 	if (rel_out_fname)
 		free(out_fname);
+
+	unloadHashPlugin(&lib_hash);
 
 	return 0;
 }

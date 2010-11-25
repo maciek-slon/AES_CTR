@@ -30,6 +30,7 @@ include(MacroOutOfSourceBuild)
 macro_ensure_out_of_source_build("${PROJECT_NAME} requires an out of source build.")
 
 SET(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
+SET(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
 
 add_subdirectory(src)
 

@@ -198,6 +198,8 @@ VERSION HISTORY:
 
 \******************************************************************* */
 
+#include "b64.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -233,7 +235,7 @@ void encodeblock(unsigned char in[3], unsigned char out[4], int len)
  **
  ** base64 encode a stream adding padding and line breaks as per spec.
  */
-void encode(FILE *infile, FILE *outfile, int linesize)
+void b64_encode(FILE *infile, FILE *outfile, int linesize)
 {
 	unsigned char in[3], out[4];
 	int i, len, blocksout = 0;
@@ -290,7 +292,7 @@ void decodeblock(unsigned char in[4], unsigned char out[3])
  **
  ** decode a base64 encoded stream discarding padding, line breaks and noise
  */
-void decode(FILE *infile, FILE *outfile)
+void b64_decode(FILE *infile, FILE *outfile)
 {
 	unsigned char in[4], out[3], v;
 	int i, len;
@@ -333,17 +335,6 @@ void decode(FILE *infile, FILE *outfile)
 	}
 }
 
-/*
- ** returnable errors
- **
- ** Error codes returned to the operating system.
- **
- */
-#define B64_SYNTAX_ERROR        1
-#define B64_FILE_ERROR          2
-#define B64_FILE_IO_ERROR       3
-#define B64_ERROR_OUT_CLOSE     4
-#define B64_LINE_SIZE_TO_MIN    5
 
 /*
  ** b64_message
@@ -413,11 +404,11 @@ int b64(int opt, char *infilename, char *outfilename, int linesize)
 		{
 			if (opt == 'e')
 			{
-				encode(infile, outfile, linesize);
+				b64_encode(infile, outfile, linesize);
 			}
 			else
 			{
-				decode(infile, outfile);
+				b64_decode(infile, outfile);
 			}
 			if (ferror(infile) || ferror(outfile))
 			{
@@ -444,6 +435,12 @@ int b64(int opt, char *infilename, char *outfilename, int linesize)
 
 	return (retcode);
 }
+
+
+
+
+
+#ifdef STANDALONE_BUILD
 
 /*
  ** showuse
@@ -485,6 +482,7 @@ void showuse(int morehelp)
 #define B64_MIN_LINE_SIZE    4
 
 #define THIS_OPT(ac, av) (ac > 1 ? av[1][0] == '-' ? av[1][1] : 0 : 0)
+
 
 /*
  ** main
@@ -547,3 +545,4 @@ int main(int argc, char **argv)
 
 	return (retcode);
 }
+#endif
