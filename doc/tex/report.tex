@@ -1,0 +1,95 @@
+\documentclass[a4paper,12pt]{article}
+
+
+\usepackage[MeX]{polski}
+\usepackage[utf8]{inputenc}	% kodowanie znaków
+\usepackage{indentfirst}
+
+\usepackage{upquote}  	% zamiana cudzysłowów klasycznych (,, ") na górne (" ") w kodach źródłowych
+\usepackage{graphicx}	% wstawianie obrazków
+\usepackage{amsmath}
+
+% Ustawienie marginesów
+\oddsidemargin=0.5cm
+\evensidemargin=-0.5cm
+\topmargin=0cm
+\textwidth=16cm
+\textheight=23cm
+
+% Ładniejsze tabelki
+\usepackage{booktabs}
+
+
+\frenchspacing
+
+\clubpenalty=10000		% to kara za sierotki
+\widowpenalty=10000		% nie pozostawia wdów
+\brokenpenalty=10000 	% nie dzieli wyrazów pomiędzy stronami
+
+
+\sloppy
+
+% Pakiety z ładnymi czcionkami
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+
+
+% Ładniejsze tabelki
+\usepackage{booktabs}
+
+\begin{document}
+
+\title{{\small Programowanie równoległe i rozproszone}\\Algorytm szyfrujący AES w trybie CTR}
+\author{Maciej Stefańczyk, Kacper Szkudlarek}
+
+\maketitle
+
+\begin{abstract}
+Algorytm szyfrujący AES (Advanced Encryption Standard) roboczo nazywany
+Rijndael. Jest to symetryczny algorytm z kluczem. Szyfruje i deszyfruje dane w 128-
+bitowych blokach, korzystając z 128, 192 lub 256 bitowych kluczy. Należy zapoznać się
+z algorytmem, zrealizować w wersji sekwencyjnej, w trybie szyfrowania CTR (Counter
+mode). Zrównoleglenie zostało oparte o bibliotekę OpenMP dla pamięci wspólnej, oraz
+MPI dla pamięci rozproszonej.
+\end{abstract}
+
+
+\section{Wstęp}
+
+\section{Implementacja}
+
+\subsection{Wersja sekwencyjna}
+
+\subsection{Pamięć wspólna -- OpenMP}
+
+\subsection{Pamięć rozproszona -- MPI}
+
+\subsection{Dodatkowe możliwości}
+
+\section{Testy}
+
+\subsection{Dane testowe}
+
+
+
+
+
+
+
+\begin{table}[h!]
+\caption[Zadanie pierwsze -- czas przetwarzania pojedynczej ramki obrazu]{Czas przetwarzania pojedynczej ramki obrazu}
+\centering
+\begin{tabular}{lcccccccc}
+\toprule
+Rozdzielczość & \multicolumn{2}{c}{1280x720} & \multicolumn{2}{c}{960x540} & \multicolumn{2}{c}{640x360} & \multicolumn{2}{c}{320x180} \\
+\cmidrule(r){2-9}
+ & czas [ms] & FPS & czas [ms] & FPS & czas [ms] & FPS & czas [ms] & FPS \\
+\midrule
+FraDIA & \bf 45,7 & 21,9 & \bf 26,8 & 37,3 & \bf 12,7 & 78,7 & \bf 4,5 & 222,2 \\
+RAW    & \bf 44,5 & 22,5 & \bf 26,1 & 38,3 & \bf 12,1 & 82,6 & \bf 4,3 & 232,6 \\
+\bottomrule
+\end{tabular}
+\label{tab:zad_1_wyniki}
+\end{table}
+
+\end{document}
