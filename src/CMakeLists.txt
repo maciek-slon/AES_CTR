@@ -22,13 +22,19 @@ TARGET_LINK_LIBRARIES(aes_test m rt)
 # ADD_EXECUTABLE(md5 md5driver.c md5.c)
 
 
+FIND_PACKAGE(MPI)
+MESSAGE(${MPI_INCLUDE_PATH})
+MESSAGE(${MPI_LIBRARY})
+INCLUDE_DIRECTORIES(${MPI_INCLUDE_PATH})
+ADD_EXECUTABLE(aes_mpi main_mpi.c aes.c plugin.c)
+TARGET_LINK_LIBRARIES(aes_mpi ${MPI_LIBRARY})
 
 
 
 ADD_LIBRARY(hash_md5 SHARED hash_md5.c md5.c)
 
 install(
-    TARGETS aes_ctr aes_test hash_md5
+    TARGETS aes_ctr aes_test hash_md5 aes_mpi
     RUNTIME DESTINATION bin
     LIBRARY DESTINATION lib
 )
@@ -37,3 +43,5 @@ install(
     PROGRAMS test_thread.sh
     DESTINATION bin
 )
+
+
