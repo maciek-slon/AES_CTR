@@ -57,7 +57,7 @@ void aesInitGlobalData(aes_global_t * data, int key_bits)
 	data->block_size = 16;
 	data->round_key_size = data->Nb * (data->Nr+1) * 4;
 
-	printf("Round key size: %d\n", data->round_key_size);
+//	printf("Round key size: %d\n", data->round_key_size);
 }
 
 void aesPrepareCipherFromFile(aes_global_t * data, const char * in_file) {
@@ -96,9 +96,9 @@ void aesPrepareCipherFromFile(aes_global_t * data, const char * in_file) {
 
 	fclose(in_f);
 
-	printf("nonce: %d %d\n", data->nonce_0, data->nonce_1);
-	printf("in_size: %d\n", data->in_size);
-	printf("in_blocks: %d\n", data->in_blocks);
+//	printf("nonce: %d %d\n", data->nonce_0, data->nonce_1);
+//	printf("in_size: %d\n", data->in_size);
+//	printf("in_blocks: %d\n", data->in_blocks);
 }
 
 void aesPrepareDecipherFromFile(aes_global_t * data, const char * in_file) {
@@ -136,9 +136,9 @@ void aesPrepareDecipherFromFile(aes_global_t * data, const char * in_file) {
 
 	fclose(in_f);
 
-	printf("nonce: %d %d\n", data->nonce_0, data->nonce_1);
-	printf("in_size: %d\n", data->in_size);
-	printf("in_blocks: %d\n", data->in_blocks);
+//	printf("nonce: %d %d\n", data->nonce_0, data->nonce_1);
+//	printf("in_size: %d\n", data->in_size);
+//	printf("in_blocks: %d\n", data->in_blocks);
 }
 
 void aesStoreResult(aes_global_t * data, const char * out_file, int with_nonce)

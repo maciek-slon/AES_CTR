@@ -213,9 +213,9 @@ int main(int argc, char** argv)
 
 
 	if (direction == DIR_CIPHER) {
-		times=aesCipher(in_fname, out_fname, key_size, key);
+		times=aesCipher(in_fname, out_fname, key_size, genkey);
 	} else {
-		times=aesDecipher(in_fname, out_fname, key_size, key);
+		times=aesDecipher(in_fname, out_fname, key_size, genkey);
 	}
 
 	aesPrintTimes(times);
