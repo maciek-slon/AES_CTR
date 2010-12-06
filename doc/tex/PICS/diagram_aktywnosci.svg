@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg height="748" version="1.1" width="447" xmlns="http://www.w3.org/2000/svg">
+<ellipse cx="152" cy="22" fill="#000000" rx="8.0" ry="8.0" stroke="#000000" stroke-width="1"/>
+<rect fill="#00ff" height="33" rx="35" ry="35" stroke="#00ff" stroke-width="1" width="275" x="15" y="79"/>
+<rect fill="#ffffff" height="35" rx="35" ry="35" stroke="#ffffff" stroke-width="1" width="277" x="14" y="78"/>
+<rect fill="#ffffff" height="35" rx="35" ry="35" stroke="#000000" stroke-width="1" width="277" x="14" y="78"/>
+<text font-family="Dialog" font-size="12" x="26" y="97">
+Analiza podanych parametrów wywołania</text>
+<polyline fill="none" points="152,30 152,79" stroke="#000000" stroke-width="1"/>
+<line fill="#000000" stroke="#000000" stroke-width="1" x1="145" x2="152" y1="67" y2="79"/>
+<line fill="#000000" stroke="#000000" stroke-width="1" x1="159" x2="152" y1="67" y2="79"/>
+<text font-family="Dialog" font-size="12" x="161" y="54">
+Parametry wywołania</text>
+<polygon fill="#ffffff" points="152,150 168,166 152,182 136,166" stroke="#ffffff" stroke-width="1"/>
+<polygon fill="none" points="152,150 168,166 152,182 136,166" stroke="#000000" stroke-width="1"/>
+<polyline fill="none" points="152,112 152,150" stroke="#000000" stroke-width="1"/>
+<line fill="#000000" stroke="#000000" stroke-width="1" x1="145" x2="152" y1="138" y2="150"/>
+<line fill="#000000" stroke="#000000" stroke-width="1" x1="159" x2="152" y1="138" y2="150"/>
+<ellipse cx="380" cy="166" fill="#000000" rx="12.0" ry="12.0" stroke="#000000" stroke-width="1"/>
+<ellipse cx="380" cy="166" fill="#ffffff" rx="11.0" ry="11.0" stroke="#ffffff" stroke-width="1"/>
+<ellipse cx="379" cy="165" fill="#000000" rx="7.5" ry="7.5" stroke="#000000" stroke-width="1"/>
+<polyline fill="none" points="168,166 368,166" stroke="#000000" stroke-width="1"/>
+<line fill="#000000" stroke="#000000" stroke-width="1" x1="356" x2="368" y1="173" y2="166"/>
+<line fill="#000000" stroke="#000000" stroke-width="1" x1="356" x2="368" y1="159" y2="166"/>
+<text font-family="Dialog" font-size="12" x="194" y="161">
+Parametry niepoprawne</text>
+<rect fill="#00ff" height="48" rx="50" ry="50" stroke="#00ff" stroke-width="1" width="211" x="47" y="224"/>
+<rect fill="#ffffff" height="50" rx="50" ry="50" stroke="#ffffff" stroke-width="1" width="213" x="46" y="223"/>
+<rect fill="#ffffff" height="50" rx="50" ry="50" stroke="#000000" stroke-width="1" width="213" x="46" y="223"/>
+<text font-family="Dialog" font-size="12" x="58" y="242">
+Inicjalizacja globalnych danych</text>
+<text font-family="Dialog" font-size="12" x="66" y="257">
+wartościami standardowymi</text>
+<polyline fill="none" points="152,182 152,224" stroke="#000000" stroke-width="1"/>
+<line fill="#000000" stroke="#000000" stroke-width="1" x1="145" x2="152" y1="212" y2="224"/>
+<line fill="#000000" stroke="#000000" stroke-width="1" x1="159" x2="152" y1="212" y2="224"/>
+<text font-family="Dialog" font-size="12" x="166" y="203">
+Parametry poprawne</text>
+<rect fill="#00ff" height="33" rx="35" ry="35" stroke="#00ff" stroke-width="1" width="211" x="47" y="314"/>
+<rect fill="#ffffff" height="35" rx="35" ry="35" stroke="#ffffff" stroke-width="1" width="213" x="46" y="313"/>
+<rect fill="#ffffff" height="35" rx="35" ry="35" stroke="#000000" stroke-width="1" width="213" x="46" y="313"/>
+<text font-family="Dialog" font-size="12" x="58" y="332">
+Wczytanie danych wejściowych</text>
+<polyline fill="none" points="152,273 152,313" stroke="#000000" stroke-width="1"/>
+<line fill="#000000" stroke="#000000" stroke-width="1" x1="145" x2="152" y1="301" y2="313"/>
+<line fill="#000000" stroke="#000000" stroke-width="1" x1="159" x2="152" y1="301" y2="313"/>
+<rect fill="#00ff" height="33" rx="35" ry="35" stroke="#00ff" stroke-width="1" width="126" x="89" y="404"/>
+<rect fill="#ffffff" height="35" rx="35" ry="35" stroke="#ffffff" stroke-width="1" width="128" x="88" y="403"/>
+<rect fill="#ffffff" height="35" rx="35" ry="35" stroke="#000000" stroke-width="1" width="128" x="88" y="403"/>
+<text font-family="Dialog" font-size="12" x="100" y="422">
+Generacja kluczy</text>
+<polyline fill="none" points="152,348 152,403" stroke="#000000" stroke-width="1"/>
+<line fill="#000000" stroke="#000000" stroke-width="1" x1="145" x2="152" y1="391" y2="403"/>
+<line fill="#000000" stroke="#000000" stroke-width="1" x1="159" x2="152" y1="391" y2="403"/>
+<polygon fill="#ffffff" points="152,478 168,494 152,510 136,494" stroke="#ffffff" stroke-width="1"/>
+<polygon fill="none" points="152,478 168,494 152,510 136,494" stroke="#000000" stroke-width="1"/>
+<polyline fill="none" points="152,437 152,478" stroke="#000000" stroke-width="1"/>
+<line fill="#000000" stroke="#000000" stroke-width="1" x1="145" x2="152" y1="466" y2="478"/>
+<line fill="#000000" stroke="#000000" stroke-width="1" x1="159" x2="152" y1="466" y2="478"/>
+<text font-family="Dialog" font-size="12" x="162" y="464">
+Dane, klucze, paramtery wykonania</text>
+<rect fill="#00ff" height="33" rx="35" ry="35" stroke="#00ff" stroke-width="1" width="164" x="268" y="540"/>
+<rect fill="#ffffff" height="35" rx="35" ry="35" stroke="#ffffff" stroke-width="1" width="166" x="267" y="539"/>
+<rect fill="#ffffff" height="35" rx="35" ry="35" stroke="#000000" stroke-width="1" width="166" x="267" y="539"/>
+<text font-family="Dialog" font-size="12" x="279" y="558">
+Wykonanie szyfrowania</text>
+<polyline fill="none" points="168,494 312,494 312,539" stroke="#000000" stroke-width="1"/>
+<line fill="#000000" stroke="#000000" stroke-width="1" x1="305" x2="312" y1="527" y2="539"/>
+<line fill="#000000" stroke="#000000" stroke-width="1" x1="319" x2="312" y1="527" y2="539"/>
+<text font-family="Dialog" font-size="12" x="328" y="504">
+Szyfrowanie</text>
+<rect fill="#00ff" height="33" rx="35" ry="35" stroke="#00ff" stroke-width="1" width="176" x="64" y="539"/>
+<rect fill="#ffffff" height="35" rx="35" ry="35" stroke="#ffffff" stroke-width="1" width="178" x="63" y="538"/>
+<rect fill="#ffffff" height="35" rx="35" ry="35" stroke="#000000" stroke-width="1" width="178" x="63" y="538"/>
+<text font-family="Dialog" font-size="12" x="75" y="557">
+Wykonanie deszyrowania</text>
+<polyline fill="none" points="152,510 152,538" stroke="#000000" stroke-width="1"/>
+<line fill="#000000" stroke="#000000" stroke-width="1" x1="145" x2="152" y1="526" y2="538"/>
+<line fill="#000000" stroke="#000000" stroke-width="1" x1="159" x2="152" y1="526" y2="538"/>
+<text font-family="Dialog" font-size="12" x="49" y="527">
+Deszyfrowanie</text>
+<rect fill="#00ff" height="33" rx="35" ry="35" stroke="#00ff" stroke-width="1" width="210" x="147" y="630"/>
+<rect fill="#ffffff" height="35" rx="35" ry="35" stroke="#ffffff" stroke-width="1" width="212" x="146" y="629"/>
+<rect fill="#ffffff" height="35" rx="35" ry="35" stroke="#000000" stroke-width="1" width="212" x="146" y="629"/>
+<text font-family="Dialog" font-size="12" x="158" y="648">
+Zapisanie danych wyjściowych</text>
+<polyline fill="none" points="193,573 193,629" stroke="#000000" stroke-width="1"/>
+<line fill="#000000" stroke="#000000" stroke-width="1" x1="186" x2="193" y1="617" y2="629"/>
+<line fill="#000000" stroke="#000000" stroke-width="1" x1="200" x2="193" y1="617" y2="629"/>
+<polyline fill="none" points="315,573 315,630" stroke="#000000" stroke-width="1"/>
+<line fill="#000000" stroke="#000000" stroke-width="1" x1="308" x2="315" y1="618" y2="630"/>
+<line fill="#000000" stroke="#000000" stroke-width="1" x1="322" x2="315" y1="618" y2="630"/>
+<text font-family="Dialog" font-size="12" x="195" y="602">
+Przetworzone dane</text>
+<ellipse cx="253" cy="722" fill="#000000" rx="12.0" ry="12.0" stroke="#000000" stroke-width="1"/>
+<ellipse cx="253" cy="722" fill="#ffffff" rx="11.0" ry="11.0" stroke="#ffffff" stroke-width="1"/>
+<ellipse cx="252" cy="721" fill="#000000" rx="7.5" ry="7.5" stroke="#000000" stroke-width="1"/>
+<polyline fill="none" points="253,663 253,710" stroke="#000000" stroke-width="1"/>
+<line fill="#000000" stroke="#000000" stroke-width="1" x1="246" x2="253" y1="698" y2="710"/>
+<line fill="#000000" stroke="#000000" stroke-width="1" x1="260" x2="253" y1="698" y2="710"/>
+</svg>

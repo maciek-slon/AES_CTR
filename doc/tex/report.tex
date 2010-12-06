@@ -8,6 +8,10 @@
 \usepackage{upquote}  	% zamiana cudzysłowów klasycznych (,, ") na górne (" ") w kodach źródłowych
 \usepackage{graphicx}	% wstawianie obrazków
 \usepackage{amsmath}
+\usepackage{listings}
+
+
+\def\PICSDIR{PICS}
 
 % Ustawienie marginesów
 \oddsidemargin=0.5cm
@@ -37,6 +41,31 @@
 % Ładniejsze tabelki
 \usepackage{booktabs}
 
+% Ustawienia wyglądu listingów
+\lstset{
+	language=C++,                               % choose the default language of the code
+	basicstyle=\footnotesize\ttfamily,       	% the size of the fonts that are used for the code
+	numbers=left,                   		% where to put the line-numbers
+%	numberstyle=\tiny,      			% the size of the fonts that are used for the line-numbers
+	stepnumber=1,                   		% the step between two line-numbers. If it's 1 each line will be numbered
+	numbersep=5pt,                  		% how far the line-numbers are from the code
+	showspaces=false,               		% show spaces adding particular underscores
+	showstringspaces=false,         	% underline spaces within strings
+	showtabs=false,                 		% show tabs within strings adding particular underscores
+	tabsize=4,	                		% sets default tabsize
+	captionpos=b,                   		% sets the caption-position
+	breaklines=true,                		% sets automatic line breaking
+	breakatwhitespace=true,        	% sets if automatic breaks should only happen at whitespace
+	extendedchars=true,
+	keywordstyle=\bfseries,
+	identifierstyle=,
+	commentstyle=\slshape,
+	stringstyle=\slshape,
+	xleftmargin=30pt,
+	frame=tb,
+	framexleftmargin=30pt,
+}
+
 \begin{document}
 
 \title{{\small Programowanie równoległe i rozproszone}\\Algorytm szyfrujący AES w trybie CTR}
@@ -45,24 +74,95 @@
 \maketitle
 
 \begin{abstract}
-Algorytm szyfrujący AES (Advanced Encryption Standard) roboczo nazywany
-Rijndael. Jest to symetryczny algorytm z kluczem. Szyfruje i deszyfruje dane w 128-
-bitowych blokach, korzystając z 128, 192 lub 256 bitowych kluczy. Należy zapoznać się
-z algorytmem, zrealizować w wersji sekwencyjnej, w trybie szyfrowania CTR (Counter
-mode). Zrównoleglenie zostało oparte o bibliotekę OpenMP dla pamięci wspólnej, oraz
-MPI dla pamięci rozproszonej.
+Dokumentacja realizacji projektu z przedmiotu "Programowanie równoległe i rozproszone". W ramach projektu wykonana została implementacja algorytmu szyfrującego AES (Advanced Encryption Standard) pracującego w trybie CTR (Counter mode). Zrównoleglenie zostało oparte o bibliotekę OpenMP dla pamięci wspólnej, oraz MPI dla pamięci rozproszonej.
 \end{abstract}
 
 
 \section{Wstęp}
+Algorytm szyfrujący AES (ang. Advanced Encryption Standard) jest to symetryczny szyfr blokowy przyjęty przez NIST (ang. National Institute of Standards and Technology) jako standard szyfrowania. Algorytm został stworzony w ramach ogłoszonego konkursu, który miał wyłonić następcę algorytmu DES(ang. Data Encryption Standard). Jego robocza nazwa to Rijndael. Ze względu na swą złożoność algorytm uważany jest za bezpieczny i powszechnie stosowany. 
+
+Algorytm szyfruje i deszyfruje dane w 128-bitowych blokach, korzystając z 128, 192 lub 256 bitowych kluczy. Dane, na których operuje algorytm formowane są w macierz 4x4, w której każda komórka jest jednym bajtem danych. W zależności do wybranej wielkości klucza szyfrującego wykonywane jest odpowiednio 10, 12 lub 14 rund szyfrujących. Wszystkie rundy poza pierwszą i ostatnią składają się z czterech kroków:
+\begin{enumerate}
+\item Etap: substytucja wstępna  - jest to nielinowe przekształcenie każdego bajtu poprzez zamianę jego wartości zgodnie z tablicą LUT.
+\item Etap: zamiana wierszy - na każdym wierszu danych wykonywana jest operacja rotacji cyklicznej o zadaną liczbę pozycji.
+\item Etap: mieszanie kolumn - każda kolumna poddawana jest odwracalnej liniowej transformacji.
+\item Etap: dodanie klucza rundowego - do danych dodawany jest klucz rundowy wygenerowany na podstawie klucza głównego.
+\end{enumerate}
+
+W opisywanej implementacji algorytm szyfrowania AES pracował w trybie CTR (ang . Counter). Jest to tzw. tryb licznikowy. Pozwala wykorzystać on szyfry blokowe do kodowania m.in. strumieni danych. Generowany jest pseudolosowy ciąg danych, który który pełni rolę strumienia szyfrującego. Jest on mieszany poprzez użycie operacji XOR z danymi wejściowymi, przez co uzyskujemy zaszyfrowany ciąg danych. Zostało to przedstawione na rysunku (\ref{rys:ctr}).
+
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth]{\PICSDIR/CTR_mode.pdf}
+\caption{Schemat działania trybu licznikowego.}
+\label{rys:ctr}
+\end{figure}
 
 \section{Implementacja}
+W ramach projektu powstały trzy wersje oprogramowania opisane w dalszych paragrafach:
+\begin{enumerate}
+\item Wersja sekwencyjna - jest to implementacja algorytmu w języku C wykonująca się jednowątkowo w sposób sekwencyjny.
+\item Wersja wykorzystująca pamięć współdzieloną - jest to rozwinięcie wersji sekwencyjnej, które dzięki wykorzystaniu OpenMP pozwala na równoległe wykonywanie na wielu procesorach.
+\item Wersja wykorzystująca pamięć rozproszoną - jest to rozwinięcie wersji sekwencyjnej, które dzięki wykorzystaniu protokołu MPI pozwala na równoległe wykonywanie na wielu maszynach połączonych między sobą siecią.
+\end{enumerate}
+
+
 
 \subsection{Wersja sekwencyjna}
 
+Diagram przepływu danych dla stworzonej aplikacji został przedstawiony na rysunku (\ref{rys:da}).  Na podstawie danych podanych w wierszu poleceń w czasie wykonywania programu podejmowane są decyzje o trybie działania - szyfrowanie, deszyfrowanie, długości wykorzystanego klucza, pobierane są dane wejściowe.
+
+Dane podawane do programu (klucz, dane do szyfrowania/deszyfrowania) odczytywane są bezpośrednio z plików i wczytywane w całości do pamięci. Dzięki takiemu rozwiązaniu narzut czasowy związany z odczytem i zapisem danych w czasie ich szyfrowania jest stosunkowo niewielki, gdyż wszystkie operacje przeprowadzane są na pamięci, a nie na plikach dyskowych. Powoduje to jednak wydłużenie czasu wczytywania danych, zwłaszcza przy dużych zbiorach, które maja być zaszyfrowane.
+
+Pseudolosowa liczba wykorzystywana w trybie CTR do szyfrowania strumienia danych została zaimplementowana w postaci złożenia czterech 32 bitowych bloków. Najbardziej znaczące 32 bit wypełniane jest wartością czasu odczytaną w momencie ładowania do pamięci pliku z danymi do zaszyfrowania. Kolejne dwa bloki 32 bitowe stanowią liczby odpowiednio 1 i 0. Do najmniej znaczących 32 bit wpisywana jest wartość licznika zliczającego ilość zaszyfrowanych bloków. W czasie zapisywania wyników wartość górnych 64 bitów zapisywana jest na samym początku pliku wynikowego.
+
+Wykorzystane w środkowej części liczy pseudolosowej wartości 1 i 0 w celu zwiększenia bezpieczeństwa należałoby zastąpić jakimiś bardziej skomplikowanymi wartościami.
+
+W celu optymalizacji przetwarzania danych zostały wprowadzone pewne modyfikacje w sposobie przechowywania i zapisywania macierzy stanu algorytmu. Każda kolumna przechowywana jest w pamięci w postaci 32 bitowej liczby. Takie potraktowanie kolumn pozwoliło znacząco ułatwić proces "mieszania" kolumn w trakcie szyfrowania.
+
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth, height=0.95\textheight]{\PICSDIR/diagram_aktywnosci.pdf}
+\caption{Diagram przepływu danych w czasie wywołanie programu.}
+\label{rys:da}
+\end{figure}
+
 \subsection{Pamięć wspólna -- OpenMP}
+\textbf{OpenMP} (ang. Open Multi-Processing)  jest to wieloplatformowy interfejs programowania aplikacji umożliwiający tworzenie aplikacji dla systemów wieloprocesorowych korzystających z pamięci współdzielonej. Interfejs może być wykorzystywany w językach C, C++ i FORTRAN, na architekturach Unix i Windows. Do sterowania sposobem wykonywania programu używa się zbiory dyrektyw kompilatora oraz zmiennych środowiskowych.
+
+Dzięki zastosowaniu trybu licznikowego CTR w implemnetacji algorytmu AES możliwe było bardzo dobre zrównoleglenie przeprowadzanych obliczeń. W tym trybie każdy 128 bitowy blok danych szyfrowany jest niezależnie od pozostałych. Jedynym elementem, który należy kontrolować jest takie modyfikowanie licznika, by możliwe było późniejsze odtworzenie jego pracy w celu odszyfrowania danych.
+
+W celu oznaczenia bloku do zrównoważenia użyta została następująca dyrektywa: \\
+ \texttt{\#pragma omp parallel for default(none) private(i) shared(data, in\_blocks, in\_ptr32)}\\
+Odnosząca się do następującego bolku kodu:\\
+\begin{lstlisting}
+	for (i = 0; i < in_blocks; ++i)
+	{
+		aes_state_t ctr = aesCipherCounter(data, i);
+		uint32_t c0 = *(uint32_t*)ctr.s;
+		uint32_t c1 = *(uint32_t*)ctr.s+4;
+		uint32_t c2 = *(uint32_t*)ctr.s+8;
+		uint32_t c3 = *(uint32_t*)ctr.s+12;
+		in_ptr32[4 * i    ] = in_ptr32[4 * i    ] ^ c0;
+		in_ptr32[4 * i + 1] = in_ptr32[4 * i + 1] ^ c1;
+		in_ptr32[4 * i + 2] = in_ptr32[4 * i + 2] ^ c2;
+		in_ptr32[4 * i + 3] = in_ptr32[4 * i + 3] ^ c3;
+	}
+\end{lstlisting}
+
+Dyrektywa ta definiuje prywatne i współdzielone zmienne zawarte w wyróżnionym fragmencie. Jako prywatna została oznaczona zmienna sterująca pętla \texttt{for}, tak by każdy wątek mógł niezależnie przetwarzać dane. Zmiennymi publicznymi są natomiast:
+\begin{itemize}
+\item \texttt{data} - struktura danych zawierająca zmienne globalne,
+\item \texttt{in\_blocks} - liczba bloków, które należy przetworzyć,
+\item \texttt{un\_ptr32} - wskaźnik na przetwarzane dane.
+\end{itemize}
+
+Zrównoleglona pętla  \texttt{for} odpowiada za szyfrowanie algorytmem AES kolejnych chwilowych zmiennych losowych i przeprowadzanie operacji XOR tych zmiennych z szyfrowanymi danymi, a także operację odwrotną - deszyfrowanie.
 
 \subsection{Pamięć rozproszona -- MPI}
+\textbf{MPI} (ang. Message Passing Interface) jest to protokół komunikacyjny będący standardem przesyłania komunikatów pomiędzy procesami programów równoległych korzystających z pamięci rozproszonej - działających na jednym lub więcej komputerach połączonych w sieć. 
+
+TODO: słoniu opisz to!!
 
 \subsection{Dodatkowe możliwości}
 
