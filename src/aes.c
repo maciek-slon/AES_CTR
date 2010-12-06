@@ -16,6 +16,22 @@ uint32_t rol(const uint32_t value, int places) {
 	return ((value << places) & 0xFFFFFFFF) | ((value >> (sizeof(uint32_t)*8 - places) & 0xFFFFFFFF));
 }
 
+void aesPrintTimes(aes_times_t times) {
+	double ns, sec;
+
+	ns = 0.001*0.001*0.001*(times.t1.tv_nsec - times.t0.tv_nsec);
+	sec = (double)(times.t1.tv_sec - times.t0.tv_sec + ns);
+	printf("%lf\t", sec);
+
+	ns = 0.001*0.001*0.001*(times.t2.tv_nsec - times.t1.tv_nsec);
+	sec = (double)(times.t2.tv_sec - times.t1.tv_sec + ns);
+	printf("%lf\t", sec);
+
+	ns = 0.001*0.001*0.001*(times.t3.tv_nsec - times.t2.tv_nsec);
+	sec = (double)(times.t3.tv_sec - times.t2.tv_sec + ns);
+	printf("%lf\n", sec);
+}
+
 
 void aesResetGlobalData(aes_global_t * data)
 {
@@ -40,6 +56,8 @@ void aesInitGlobalData(aes_global_t * data, int key_bits)
 	data->Nb = 4;
 	data->block_size = 16;
 	data->round_key_size = data->Nb * (data->Nr+1) * 4;
+
+	printf("Round key size: %d\n", data->round_key_size);
 }
 
 void aesPrepareCipherFromFile(aes_global_t * data, const char * in_file) {
@@ -77,9 +95,53 @@ void aesPrepareCipherFromFile(aes_global_t * data, const char * in_file) {
 	data->nonce_1 = 1;
 
 	fclose(in_f);
+
+	printf("nonce: %d %d\n", data->nonce_0, data->nonce_1);
+	printf("in_size: %d\n", data->in_size);
+	printf("in_blocks: %d\n", data->in_blocks);
 }
 
-void aesStoreResult(aes_global_t * data, const char * out_file)
+void aesPrepareDecipherFromFile(aes_global_t * data, const char * in_file) {
+	FILE * in_f;
+
+	in_f = fopen(in_file, "rb");
+
+	if (in_f == NULL)
+		perror("Can't open input file!");
+
+	// get input file size
+	fseek(in_f, 0, SEEK_END);
+	data->in_size = ftell(in_f) - 2*sizeof(uint32_t);
+	data->in_blocks = (uint32_t) ceil(1.0 * data->in_size / data->block_size);
+	fseek(in_f, 0, SEEK_SET);
+
+	// allocate memory for input buffer
+	data->in_data = (uint8_t *) malloc(data->in_blocks * data->block_size);
+	if (data->in_data == NULL)
+	{
+		fclose(in_f);
+		perror("Can't allocate memory for input buffer!");
+	}
+
+	fread(&(data->nonce_0), sizeof(uint32_t), 1, in_f);
+	fread(&(data->nonce_1), sizeof(uint32_t), 1, in_f);
+
+	// load file content into buffer
+	if (data->in_size != fread(data->in_data, sizeof(uint8_t), data->in_size, in_f))
+	{
+		free(data->in_data);
+		fclose(in_f);
+		perror("Can't read input file to buffer!");
+	}
+
+	fclose(in_f);
+
+	printf("nonce: %d %d\n", data->nonce_0, data->nonce_1);
+	printf("in_size: %d\n", data->in_size);
+	printf("in_blocks: %d\n", data->in_blocks);
+}
+
+void aesStoreResult(aes_global_t * data, const char * out_file, int with_nonce)
 {
 	FILE * out_f;
 
@@ -88,12 +150,16 @@ void aesStoreResult(aes_global_t * data, const char * out_file)
 	if (out_f == NULL)
 		perror("Can't open output file!");
 
+	if (with_nonce) {
+		fwrite(&(data->nonce_0), sizeof(uint32_t), 1, out_f);
+		fwrite(&(data->nonce_1), sizeof(uint32_t), 1, out_f);
+	}
+
 	// write output buffer into file
-	if (data->in_size != fwrite(data->in_data, sizeof(uint8_t), data->in_size,
-			out_f))
+	if (data->in_size != fwrite(data->in_data, sizeof(uint8_t), data->in_size, out_f))
 	{
 		fclose(out_f);
-		perror("Can't read input file to buffer!");
+		perror("Can't store output file!");
 	}
 
 	fclose(out_f);
@@ -109,7 +175,7 @@ void aesKeyExpansion(aes_global_t * data, const uint8_t * key)
 
 
     // The first round key is the key itself.
-    memcpy(r32, key, data->Nk * 4);
+    memcpy(RoundKey, key, data->Nk * 4);
 
     i = data->Nk;
     // All other round keys are found from the previous round keys.
@@ -290,7 +356,7 @@ aes_state_t aesCipherCounter(aes_global_t * data, uint32_t ctr) {
     return state;
 }
 
-void aesCipherT(aes_global_t * data, uint32_t c)
+void aesCipherT(aes_global_t * data)
 {
 	uint32_t i;
 	uint8_t * in_ptr = data->in_data;
@@ -298,20 +364,27 @@ void aesCipherT(aes_global_t * data, uint32_t c)
 
 	uint32_t in_blocks = data->in_blocks;
 
-	#pragma omp parallel for default(none) private(i) shared(in_blocks, in_ptr32, c)
+	#pragma omp parallel for default(none) private(i) shared(data, in_blocks, in_ptr32)
 	for (i = 0; i < in_blocks; ++i)
 	{
-		in_ptr32[4 * i    ] = in_ptr32[4 * i    ] ^ c;
-		in_ptr32[4 * i + 1] = in_ptr32[4 * i + 1] ^ c;
-		in_ptr32[4 * i + 2] = in_ptr32[4 * i + 2] ^ c;
-		in_ptr32[4 * i + 3] = in_ptr32[4 * i + 3] ^ c;
+		aes_state_t ctr = aesCipherCounter(data, i);
+		uint32_t c0 = *(uint32_t*)ctr.s;
+		uint32_t c1 = *(uint32_t*)ctr.s+4;
+		uint32_t c2 = *(uint32_t*)ctr.s+8;
+		uint32_t c3 = *(uint32_t*)ctr.s+12;
+		in_ptr32[4 * i    ] = in_ptr32[4 * i    ] ^ c0;
+		in_ptr32[4 * i + 1] = in_ptr32[4 * i + 1] ^ c1;
+		in_ptr32[4 * i + 2] = in_ptr32[4 * i + 2] ^ c2;
+		in_ptr32[4 * i + 3] = in_ptr32[4 * i + 3] ^ c3;
 	}
 }
 
-void aesCipher(const char * in_fname, const char * out_fname, int key_size, const uint8_t * key) {
+aes_times_t aesCipher(const char * in_fname, const char * out_fname, int key_size, const uint8_t * key) {
 
 	aes_global_t data;
 	aes_times_t times;
+
+	clock_gettime(CLOCK_REALTIME, &(times.t0));
 
 	aesResetGlobalData(&data);
 	aesInitGlobalData(&data, key_size);
@@ -320,17 +393,40 @@ void aesCipher(const char * in_fname, const char * out_fname, int key_size, cons
 
 	clock_gettime(CLOCK_REALTIME, &(times.t1));
 
-	/*for (i = 0; i < 51; ++i)
-		aesCipher(&data, c);*/
+	aesCipherT(&data);
 
-	clock_gettime(CLOCK_REALTIME, &(times.t1));
+	clock_gettime(CLOCK_REALTIME, &(times.t2));
 
-	aesStoreResult(&data, out_fname);
+	aesStoreResult(&data, out_fname, AES_WITH_NONCE);
 	aesFreeGlobalData(&data);
 
-	clock_gettime(CLOCK_REALTIME, &(times.t1));
+	clock_gettime(CLOCK_REALTIME, &(times.t3));
+
+	return times;
 }
 
-void aesDecipher(const char * in_fname, const char * out_fname, int key_size, const char * key) {
+aes_times_t aesDecipher(const char * in_fname, const char * out_fname, int key_size, const uint8_t * key) {
+	aes_global_t data;
+	aes_times_t times;
+
+	clock_gettime(CLOCK_REALTIME, &(times.t0));
+
+	aesResetGlobalData(&data);
+	aesInitGlobalData(&data, key_size);
+	aesPrepareDecipherFromFile(&data, in_fname);
+	aesKeyExpansion(&data, key);
+
+	clock_gettime(CLOCK_REALTIME, &(times.t1));
+
+	aesCipherT(&data);
+
+	clock_gettime(CLOCK_REALTIME, &(times.t2));
+
+	aesStoreResult(&data, out_fname, AES_OMIT_NONCE);
+	aesFreeGlobalData(&data);
+
+	clock_gettime(CLOCK_REALTIME, &(times.t3));
+
+	return times;
 }
 

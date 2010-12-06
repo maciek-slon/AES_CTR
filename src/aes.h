@@ -8,6 +8,9 @@
 #include <stdint.h>
 #include <time.h>
 
+#define AES_WITH_NONCE 1
+#define AES_OMIT_NONCE 0
+
 /*!
  * Global data used by AES algorithm.
  *
@@ -40,7 +43,7 @@ typedef struct aes_global_s
 	/// Round key
 	uint8_t * round_key;
 	/// Round key size in words (which is Nb*(Nr+1))
-	uint8_t round_key_size;
+	uint16_t round_key_size;
 
 	// nonce
 	/// First part of nonce
@@ -50,10 +53,14 @@ typedef struct aes_global_s
 } aes_global_t;
 
 typedef struct aes_times_s {
+	struct timespec t0;
 	struct timespec t1;
 	struct timespec t2;
 	struct timespec t3;
 } aes_times_t;
+
+void aesPrintTimes(aes_times_t times);
+
 
 /*!
  * Reset EAS global data structure.
@@ -91,6 +98,9 @@ void aesInitGlobalData(aes_global_t * data, int key_bits);
  */
 void aesPrepareCipherFromFile(aes_global_t * data, const char * in_file);
 
+
+void aesPrepareDecipherFromFile(aes_global_t * data, const char * in_file);
+
 /*!
  * Store cipher result to file.
  *
@@ -99,7 +109,7 @@ void aesPrepareCipherFromFile(aes_global_t * data, const char * in_file);
  *
  * \ingroup g_aes_global
  */
-void aesStoreResult(aes_global_t * data, const char * out_file);
+void aesStoreResult(aes_global_t * data, const char * out_file, int with_nonce);
 
 /*!
  * This function produces Nb*(Nr+1) round keys.
@@ -136,8 +146,9 @@ aes_state_t aesCipherCounter(aes_global_t * data, uint32_t ctr);
  *
  * \ingroup g_aes_cipher
  */
-void aesCipherT(aes_global_t * data, uint32_t c);
+void aesCipherT(aes_global_t * data);
 
-void aesCipher(const char * in_fname, const char * out_fname, int key_size, const uint8_t * key);
+aes_times_t aesCipher(const char * in_fname, const char * out_fname, int key_size, const uint8_t * key);
+aes_times_t aesDecipher(const char * in_fname, const char * out_fname, int key_size, const uint8_t * key);
 
 #endif /* AES_H_ */

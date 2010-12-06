@@ -4,7 +4,7 @@ SET(CMAKE_EXE_LINKER_FLAGS ${CMAKE_EXE_LINKER_FLAGS} -fopenmp)
 ADD_DEFINITIONS(-fopenmp -Wall)
 
 # Create an executable file from sources
-ADD_EXECUTABLE(aes_ctr main.c plugin.c)
+ADD_EXECUTABLE(aes_ctr main.c plugin.c aes.c)
 
 TARGET_LINK_LIBRARIES(aes_ctr m dl)
 

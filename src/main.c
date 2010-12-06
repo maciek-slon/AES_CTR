@@ -16,6 +16,7 @@
 #include <omp.h>
 
 #include "plugin.h"
+#include "aes.h"
 
 #define DIR_UNKNOWN  0
 #define DIR_CIPHER   1
@@ -25,8 +26,6 @@
 
 void memprint(uint8_t * ptr, int size, int width) {
 	int i;
-
-	printf("\n");
 
 	for (i = 0; i < size; ++i) {
 		printf("%02x ", ptr[i]);
@@ -64,6 +63,7 @@ int main(int argc, char** argv)
 	int verbose = 0;
 	int failure = 0;
 	uint8_t genkey[32];
+	aes_times_t times;
 
 
 	lib_hash_t lib_hash;
@@ -202,7 +202,23 @@ int main(int argc, char** argv)
 	}
 
 	lib_hash.hash(key, genkey, key_size / 8);
-	memprint(genkey, key_size / 8, 16);
+
+	if (verbose) {
+			printf("Key:           ");
+			memprint(genkey, key_size / 8, 16);
+	}
+
+
+
+
+
+	if (direction == DIR_CIPHER) {
+		times=aesCipher(in_fname, out_fname, key_size, key);
+	} else {
+		times=aesDecipher(in_fname, out_fname, key_size, key);
+	}
+
+	aesPrintTimes(times);
 
 	if (rel_out_fname)
 		free(out_fname);
