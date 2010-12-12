@@ -58,6 +58,11 @@ int main(int argc, char **argv)
 
 	lib_hash_t lib_hash;
 
+	int failed = 1;
+
+	struct timespec t0, t1;
+	double ela;
+
     /*
      * Now replicate this process to create parallel processes.
      * From this point on, every process executes a separate copy
@@ -84,7 +89,7 @@ int main(int argc, char **argv)
 
     	if (argc < 2) {
     		//printUsage(argv[0]);
-    		return EXIT_SUCCESS;
+
     	}
 
     	// Parsing console parameters
@@ -97,7 +102,8 @@ int main(int argc, char **argv)
     		case 'c':
     			if (direction == DIR_DECIPHER) {
     				printf("Conflicting direction flags specified (-c and -d)!\n");
-    				return EXIT_FAILURE;
+    				failed = 2;
+    				break;
     			} else {
     				direction = DIR_CIPHER;
     			}
@@ -105,7 +111,8 @@ int main(int argc, char **argv)
     		case 'd':
     			if (direction == DIR_CIPHER) {
     				printf("Conflicting direction flags specified (-c and -d)!\n");
-    				return EXIT_FAILURE;
+    				failed = 2;
+    				break;
     			} else {
     				direction = DIR_DECIPHER;
     			}
@@ -115,14 +122,16 @@ int main(int argc, char **argv)
     			break;
     		case 'h':
     			//printHelp();
-    			return EXIT_SUCCESS;
+    			failed = 2;
+    			break;
     		case 'k':
     			key = optarg;
     			break;
     		case 'o':
     			if (out_fname) {
     				printf("Only one -o option allowed!\n");
-    				return EXIT_FAILURE;
+    				failed = 2;
+    				break;
     			} else {
     				out_fname = optarg;
     			}
@@ -135,18 +144,23 @@ int main(int argc, char **argv)
     			break;
     		case '?':
     			//printHelp();
-    			return EXIT_SUCCESS;
+    			failed = 2;
+    			break;
     		default:
     			printf("Unknown argument: %c!\n", c);
-    			return EXIT_FAILURE;
+    			failed = 2;
     			break;
     		}
+
+    		if (failed == 2)
+    			break;
     	}
-    	if (optind < argc) {
+
+    	if ( (optind < argc) && (failed < 2) ) {
     		while (optind < argc) {
     			if (in_fname) {
     				printf("Too many input files specified!\n");
-    				return EXIT_FAILURE;
+    				break;
     			} else {
     				in_fname = argv[optind];
     			}
@@ -155,20 +169,25 @@ int main(int argc, char **argv)
     		}
     	}
 
+    	if (failed == 2) {
+    		printf("failed.\n");
+    		fflush(stdout);
+    	}
+
 
     	// Checking, if all necessary parameters were set
-    	if (direction == DIR_UNKNOWN) {
+    	if (direction == DIR_UNKNOWN && failed < 2) {
     		printf("Specify either cipher or decipher (-c/-d)!\n");
-    		return EXIT_FAILURE;
+    		failed = 2;
     	}
 
 
-    	if (!in_fname) {
+    	if (!in_fname && failed < 2) {
     		printf("No input file specified!\n");
-    		return EXIT_FAILURE;
+    		failed = 2;
     	}
 
-    	if (!out_fname) {
+    	if (!out_fname  && failed < 2) {
     		rel_out_fname = 1;
     		out_fname = malloc(strlen(in_fname) + 8);
     		strcpy(out_fname, in_fname);
@@ -178,14 +197,14 @@ int main(int argc, char **argv)
     			strcat(out_fname, ".public");
     	}
 
-    	if (key_size != 128 && key_size != 192 && key_size != 256) {
+    	if (key_size != 128 && key_size != 192 && key_size != 256  && failed < 2) {
     		printf("Key size have to be either 128, 192 or 256 bits!\n");
-    		return EXIT_FAILURE;
+    		failed = 2;
     	}
 
-    	if (!key) {
+    	if (!key  && failed < 2) {
     		printf("Key not specified!\n");
-    		return EXIT_FAILURE;
+    		failed = 2;
     	}
 
     	if (!algo) {
@@ -197,7 +216,7 @@ int main(int argc, char **argv)
     	}
 
 
-    	if (verbose) {
+    	if (verbose  && failed < 2) {
     		printf("Input file:    %s\n", in_fname);
     		printf("Output file:   %s\n", out_fname);
     		printf("Key:           %s\n", key);
@@ -208,19 +227,22 @@ int main(int argc, char **argv)
     	}
 
     	// find all required plugins
-		if (loadHashPlugin(generator, &lib_hash) != 0) {
+		if (failed < 2 && loadHashPlugin(generator, &lib_hash) != 0) {
 			printf("Unable to load key generator plugin.\n");
 			failure = 1;
 		}
 
+		// prepare key from given input
 		lib_hash.hash(key, genkey, key_size / 8);
 
-		if (verbose) {
+		if (failed < 2 && verbose) {
 				printf("Key:           ");
 				memprint(genkey, key_size / 8, key_size / 8);
 		}
 
 
+		// load data from file, compute all necessary parameters
+		if(failed < 2)
 		{
 			FILE * in_f;
 			int per_proc;
@@ -278,19 +300,21 @@ int main(int argc, char **argv)
 			}
 
 			fclose(in_f);
+
+			failed = 0;
 		}
 
 
-
-
     }
-
+    // end of data preparation
 
 
 // ---------------------------------------------------------------------------------
 // WARNING! MAGIC SECTION BEGINS HERE!!
 // ---------------------------------------------------------------------------------
-
+    if (my_id == root) {
+    	clock_gettime(CLOCK_REALTIME, &(t0));
+    }
 
     // broadcast global data to all processes
     MPI_Bcast(&key_size, 1, MPI_INT, root, MPI_COMM_WORLD);
@@ -300,16 +324,11 @@ int main(int argc, char **argv)
     MPI_Bcast(&data.nonce_0, 4, MPI_BYTE, root, MPI_COMM_WORLD);
     MPI_Bcast(&data.nonce_1, 4, MPI_BYTE, root, MPI_COMM_WORLD);
 
-    //printf("%d: %d, %d, %d\n", my_id, data.in_blocks, data.nonce_0, data.nonce_1);
-
 	aesInitGlobalData(&data, key_size);
 
     // allocate data buffer for each process
     data.in_data = malloc(data.in_blocks * data.block_size);
     aesKeyExpansion(&data, genkey);
-
-    //genkey[0] = my_id;
-    //memprint(genkey, key_size / 8, key_size / 8);
 
     // scatter data to all processes
 	MPI_Scatter(input_buffer, data.in_blocks*data.block_size, MPI_BYTE, data.in_data,  data.in_blocks*data.block_size, MPI_BYTE, root, MPI_COMM_WORLD);
@@ -319,6 +338,13 @@ int main(int argc, char **argv)
 
 	// return processed data
 	MPI_Gather(data.in_data, data.in_blocks*data.block_size, MPI_BYTE, input_buffer,  data.in_blocks*data.block_size, MPI_BYTE, root, MPI_COMM_WORLD);
+
+	if (my_id == root) {
+		clock_gettime(CLOCK_REALTIME, &(t1));
+		ela = (double)(t1.tv_sec - t0.tv_sec + 0.001*0.001*0.001*(t1.tv_nsec - t0.tv_nsec));
+		printf("%lf\n", ela);
+		fflush(stdout);
+	}
 
 // ---------------------------------------------------------------------------------
 // NOTE: Chill out, all the magic is gone now.
@@ -335,7 +361,7 @@ int main(int argc, char **argv)
 			out_f = fopen(out_fname, "wb");
 
 			if (out_f == NULL)
-				perror("Can't open output file!");
+				printf("Can't open output file!\n");
 
 			if (direction == DIR_CIPHER) {
 				fwrite(&(data.nonce_0), sizeof(uint32_t), 1, out_f);

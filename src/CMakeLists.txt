@@ -9,7 +9,7 @@ TARGET_LINK_LIBRARIES(aes_ctr m dl rt)
 
 
 ADD_EXECUTABLE(aes_test test.c aes.c)
-TARGET_LINK_LIBRARIES(aes_test m rt)
+TARGET_LINK_LIBRARIES(aes_test m rt dl)
 
 
 #ADD_EXECUTABLE(b64 b64.c)
@@ -27,7 +27,7 @@ MESSAGE(${MPI_INCLUDE_PATH})
 MESSAGE(${MPI_LIBRARY})
 INCLUDE_DIRECTORIES(${MPI_INCLUDE_PATH})
 ADD_EXECUTABLE(aes_mpi main_mpi.c aes.c plugin.c)
-TARGET_LINK_LIBRARIES(aes_mpi ${MPI_LIBRARY})
+TARGET_LINK_LIBRARIES(aes_mpi ${MPI_LIBRARY} dl m rt)
 
 
 
