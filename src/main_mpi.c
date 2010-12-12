@@ -53,6 +53,8 @@ int main(int argc, char **argv)
 
 	uint8_t * input_buffer;
 
+	void * buffer;
+
 
 	aes_global_t data;
 
@@ -60,7 +62,7 @@ int main(int argc, char **argv)
 
 	int failed = 1;
 
-	struct timespec t0, t1;
+	aes_times_t times;
 	double ela;
 
     /*
@@ -84,8 +86,8 @@ int main(int argc, char **argv)
     ierr = MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
 
     if (my_id == root) {
-    	printf("Spawned %d processes.\n", num_procs);
-    	fflush(stdout);
+    	//printf("Spawned %d processes.\n", num_procs);
+    	//fflush(stdout);
 
     	if (argc < 2) {
     		//printUsage(argv[0]);
@@ -270,8 +272,8 @@ int main(int argc, char **argv)
 			rest = data.in_blocks % num_procs;
 
 
-			printf("Input file has %d bytes, which is %d blocks.\n", data.in_size, data.in_blocks);
-			printf("Each of %d processes will have %d blocks in buffer (%d blocks left).\n", num_procs, per_proc, rest);
+			//printf("Input file has %d bytes, which is %d blocks.\n", data.in_size, data.in_blocks);
+			//printf("Each of %d processes will have %d blocks in buffer (%d blocks left).\n", num_procs, per_proc, rest);
 
 			data.in_blocks /= num_procs;
 
@@ -313,7 +315,7 @@ int main(int argc, char **argv)
 // WARNING! MAGIC SECTION BEGINS HERE!!
 // ---------------------------------------------------------------------------------
     if (my_id == root) {
-    	clock_gettime(CLOCK_REALTIME, &(t0));
+    	clock_gettime(CLOCK_REALTIME, &(times.t0));
     }
 
     // broadcast global data to all processes
@@ -327,23 +329,32 @@ int main(int argc, char **argv)
 	aesInitGlobalData(&data, key_size);
 
     // allocate data buffer for each process
+	//buffer = malloc(data.in_blocks * data.block_size);
+	//MPI_Buffer_attach (buffer, data.in_blocks * data.block_size);
+
     data.in_data = malloc(data.in_blocks * data.block_size);
     aesKeyExpansion(&data, genkey);
 
     // scatter data to all processes
 	MPI_Scatter(input_buffer, data.in_blocks*data.block_size, MPI_BYTE, data.in_data,  data.in_blocks*data.block_size, MPI_BYTE, root, MPI_COMM_WORLD);
 
+	if (my_id == root) {
+		clock_gettime(CLOCK_REALTIME, &(times.t1));
+	}
+
 	// process data - cipher/decipher given block
 	aesCipherT(&data);
+
+	if (my_id == root) {
+		clock_gettime(CLOCK_REALTIME, &(times.t2));
+	}
 
 	// return processed data
 	MPI_Gather(data.in_data, data.in_blocks*data.block_size, MPI_BYTE, input_buffer,  data.in_blocks*data.block_size, MPI_BYTE, root, MPI_COMM_WORLD);
 
 	if (my_id == root) {
-		clock_gettime(CLOCK_REALTIME, &(t1));
-		ela = (double)(t1.tv_sec - t0.tv_sec + 0.001*0.001*0.001*(t1.tv_nsec - t0.tv_nsec));
-		printf("%lf\n", ela);
-		fflush(stdout);
+		clock_gettime(CLOCK_REALTIME, &(times.t3));
+		aesPrintTimes(times);
 	}
 
 // ---------------------------------------------------------------------------------
