@@ -217,11 +217,33 @@ Testy jednostkowe mają za zadanie wykazanie poprawności działania poszczegól
 Drugim wykonanym rodzajem testów stworzonej aplikacji są testy wydajnościowe. Zadanie testów było zmierzenie różnic w czasie wykonania tego samego zadania testowego przez różne wersje oprogramowania. Wyniki testów jednoznacznie pokazały wzrost wydajności aplikacji poprzez użycie narzędzi do zrównoleglania obliczeń.
 
 \subsubsection{Dane testowe}
+
+Do testowania stworzonych aplikacji przygotowany został zbiór danych testowych. Miał on postać pliku zawierającego pseudolosowe wygenerowane przy pomocy systemowego generatora liczb pseudolosowych sytemu Linux. Rozmiar danych wygenerowanych danych testowych to 10 MB.\\
+\texttt{dd if=/dev/urandom of=pliktestowy count=10M}
+
+
+
 \subsubsection{Wyniki}
+Na rysunku \ref{rys:res_omp} przedstawione zostały cztery wykresy:
+\begin{enumerate}
+\item Zależności czasu przetwarzania części równoległej programu od ilości wątków przetwarzających.
+\item Zależności czasu przetwarzania części sekwencyjnej programu od ilości wątków przetwarzających.
+\item Współczynnik przyspieszenia przetwarzania danych równoległych w zależności od liczby wątków.
+\item Współczynnik przyspieszenia programu w zależności od liczby wątków.
+\end{enumerate}
 
+Wyniki prezentowane na wykresach są zgodne z naszymi oczekiwaniami. Widać wyraźną zależność czasu przetwarzani danych od liczby wątków przetwarzających. Podobnie jest z wykresem współczynnika przyspieszenia. Obliczenia zostały wykonana na 4-rdzeniowej maszynie firmy SUN, z parametrem wykonania mówiącym o wykorzystaniu 16 wątków obliczeniowych.
 
+Maksymalne przyspieszenie możemy obliczyć ze wzoru Amdahla:\\
+$S(n,p)\overrightarrow{p \rightarrow \infty } \frac{1}{\beta(n, 1)} = $, \\
+gdzie $S(n,p)$ to przyspieszenie, $\beta(n, 1)$ to czas wykonania części sekwencyjnej na maszynie z $p$ procesorami.
 
-
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth]{\PICSDIR/threads.pdf}
+\caption{Wyniki testów wydajnościowych aplikacji zrównoleglonej przy użyciu OpenMP.}
+\label{rys:res_omp}
+\end{figure}
 
 
 
