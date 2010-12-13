@@ -79,7 +79,7 @@ Dokumentacja realizacji projektu z przedmiotu "Programowanie równoległe i rozp
 
 
 \section{Wstęp}
-Algorytm szyfrujący AES (ang. Advanced Encryption Standard) jest to symetryczny szyfr blokowy przyjęty przez NIST (ang. National Institute of Standards and Technology) jako standard szyfrowania. Algorytm został stworzony w ramach ogłoszonego konkursu, który miał wyłonić następcę algorytmu DES(ang. Data Encryption Standard). Jego robocza nazwa to Rijndael. Ze względu na swą złożoność algorytm uważany jest za bezpieczny i powszechnie stosowany. 
+Algorytm szyfrujący AES (ang. Advanced Encryption Standard) jest to symetryczny szyfr blokowy przyjęty przez NIST (ang. National Institute of Standards and Technology) jako standard szyfrowania. Algorytm został stworzony w ramach ogłoszonego konkursu, który miał wyłonić następcę algorytmu DES(ang. Data Encryption Standard). Jego robocza nazwa to Rijndael. Ze względu na swą złożoność algorytm uważany jest za bezpieczny i powszechnie stosowany.
 
 Algorytm szyfruje i deszyfruje dane w 128-bitowych blokach, korzystając z 128, 192 lub 256 bitowych kluczy. Dane, na których operuje algorytm formowane są w macierz 4x4, w której każda komórka jest jednym bajtem danych. W zależności do wybranej wielkości klucza szyfrującego wykonywane jest odpowiednio 10, 12 lub 14 rund szyfrujących. Wszystkie rundy poza pierwszą i ostatnią składają się z czterech kroków:
 \begin{enumerate}
@@ -157,10 +157,10 @@ Dyrektywa ta definiuje prywatne i współdzielone zmienne zawarte w wyróżniony
 \item \texttt{un\_ptr32} - wskaźnik na przetwarzane dane.
 \end{itemize}
 
-Zrównoleglona pętla  \texttt{for} odpowiada za szyfrowanie algorytmem AES kolejnych chwilowych zmiennych losowych i przeprowadzanie operacji XOR tych zmiennych z szyfrowanymi danymi, a także operację odwrotną - deszyfrowanie. Tak przetworzone dane są przekazywane do zapisania w pliku wynikowym. 
+Zrównoleglona pętla  \texttt{for} odpowiada za szyfrowanie algorytmem AES kolejnych chwilowych zmiennych losowych i przeprowadzanie operacji XOR tych zmiennych z szyfrowanymi danymi, a także operację odwrotną - deszyfrowanie. Tak przetworzone dane są przekazywane do zapisania w pliku wynikowym.
 
 \subsection{Pamięć rozproszona -- MPI}
-\textbf{MPI} (ang. Message Passing Interface) jest to protokół komunikacyjny będący standardem przesyłania komunikatów w rzeczywistych i wirtualnych maszynach równoległych z pamięcią lokalną. 
+\textbf{MPI} (ang. Message Passing Interface) jest to protokół komunikacyjny będący standardem przesyłania komunikatów w rzeczywistych i wirtualnych maszynach równoległych z pamięcią lokalną.
 
 Przy użyciu MPI powstała wersja oprogramowania umożliwiająca zrównoleglenie obliczeń  w oparciu o klaster.  Każdy z komputerów wchodzących w skład klastra dostaje porcję danych, którą przetwarza a następnie zawraca wyniki do procesu nadzorującego.
 
@@ -206,7 +206,7 @@ Następnie każdy z procesów alokuje sobie pamięć dla danych, które będzie 
 
 Testy jednostkowe mają za zadanie wykazanie poprawności działania poszczególnych elementów składowych tworzonego oprogramowania.  Dla opisywanej aplikacji powstały następujące testy:
 \begin{enumerate}
-\item \textbf{\texttt{test\_key}} - jest to test badający poprawność generowanych kluczu rundowych. Do funkcji podawane są dane testowe w postaci klucza pierwotnego, rozmiaru klucza, a także oczekiwanego wyniku. Funkcja testuje poprawność wygenerowanego klucza porównując go z podanym oczekiwanym wynikiem. 
+\item \textbf{\texttt{test\_key}} - jest to test badający poprawność generowanych kluczu rundowych. Do funkcji podawane są dane testowe w postaci klucza pierwotnego, rozmiaru klucza, a także oczekiwanego wyniku. Funkcja testuje poprawność wygenerowanego klucza porównując go z podanym oczekiwanym wynikiem.
 \item \textbf{\texttt{test\_mix}} - jest to funkcja mieszanie kolumn macierzy stanu algorytmu szyfrującego. Pobiera dwa argumenty, pierwszym jest przykładowa macierz stanu, drugim oczekiwane rezultaty. Po wykonaniu operacji mieszania otrzymane wyniki porównywane są z otrzymanymi danymi.
 \item \textbf{\texttt{test\_shift}} - jest to funkcja testująca poprawność operacji rotacji wierszy macierzy stanu algorytmu. Podobnie jak funkcja \texttt{test\_mix} pobiera dwa argumenty - przykładową macierz stanu i oczekiwany wynik operacji, z którym porównywane są otrzymane wyniki.
 \item \textbf{\texttt{test\_ctr}} - jest to test badający poprawność szyfrowania zaimplementowanego algorytmu. Jako dane wejściowe pobierane są wektor inicjujący, dane do zaszyfrowania, oczekiwane wyniki oraz klucz, który ma być użyty do szyfrowania. Wektor użyty w tym teście jednostkowym został pobrany z publikacji NIST "Recommendation for Block Cipher Modes of Operation".
@@ -232,15 +232,19 @@ Na rysunku \ref{rys:res_omp} przedstawione zostały cztery wykresy:
 \item Współczynnik przyspieszenia programu w zależności od liczby wątków.
 \end{enumerate}
 
-Wyniki prezentowane na wykresach są zgodne z naszymi oczekiwaniami. Widać wyraźną zależność czasu przetwarzani danych od liczby wątków przetwarzających. Podobnie jest z wykresem współczynnika przyspieszenia. Obliczenia zostały wykonana na 4-rdzeniowej maszynie firmy SUN, z parametrem wykonania mówiącym o wykorzystaniu 16 wątków obliczeniowych.
+Wyniki prezentowane na wykresach są zgodne z naszymi oczekiwaniami. Widać wyraźną
+zależność czasu przetwarzani danych od liczby wątków przetwarzających. Podobnie
+jest z wykresem współczynnika przyspieszenia. Obliczenia zostały wykonana na
+4-rdzeniowej maszynie firmy SUN, z parametrem wykonania mówiącym o wykorzystaniu
+16 wątków obliczeniowych.
 
 Maksymalne przyspieszenie możemy obliczyć ze wzoru Amdahla:\\
-$S(n,p)\overrightarrow{p \rightarrow \infty } \frac{1}{\beta(n, 1)} = $, \\
-gdzie $S(n,p)$ to przyspieszenie, $\beta(n, 1)$ to czas wykonania części sekwencyjnej na maszynie z $p$ procesorami.
+$S(n,p) \xrightarrow[p \rightarrow \infty]{} \frac{1}{\beta(n, 1)} = $ \\
+gdzie $S(n,p)$ to przyspieszenie, $\beta(n, 1)$ to czas wykonania części sekwencyjnej na maszynie z $p$ procesorami. W naszych
 
 \begin{figure}
 \centering
-\includegraphics[width=\textwidth]{\PICSDIR/threads.pdf}
+\includegraphics[width=\textwidth]{\PICSDIR/omp.pdf}
 \caption{Wyniki testów wydajnościowych aplikacji zrównoleglonej przy użyciu OpenMP.}
 \label{rys:res_omp}
 \end{figure}
